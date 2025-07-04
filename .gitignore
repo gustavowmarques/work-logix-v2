@@ -1,0 +1,19 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Database (if using SQLite for dev)
+*.sqlite3
+
+# Django migrations cache (optional)
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
+# VSCode project files
+.vscode/
