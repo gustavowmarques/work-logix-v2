@@ -6,7 +6,7 @@ from django.utils import timezone
     # Define the available user roles for this system
 ROLE_CHOICES = [
     ('admin', 'Admin'),           # Superuser with full control
-    ('pm', 'Property Manager'),   # Manages companies and work orders
+    ('property_manager', 'Property Manager'),   # Manages companies and work orders
     ('contractor', 'Contractor'), # Performs assigned work
     ('assistant', 'Assistant'),   # View-only role, can message PM/Admin
 ]

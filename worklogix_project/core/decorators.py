@@ -13,7 +13,7 @@ def role_required(required_role):
     return decorator
 
 # Shorthand decorators for each role
-property_manager_required = role_required('pm')
+property_manager_required = role_required('property_manager')
 contractor_required = role_required('contractor')
 assistant_required = role_required('assistant')
 admin_required = role_required('admin')

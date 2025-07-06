@@ -70,7 +70,7 @@ def redirect_after_login(request):
     user = request.user
     if user.role == 'admin':
         return redirect('admin_dashboard')
-    elif user.role == 'pm':
+    elif user.role == 'property_manager':
         return redirect('pm_dashboard')
     elif user.role == 'contractor':
         return redirect('contractor_dashboard')
