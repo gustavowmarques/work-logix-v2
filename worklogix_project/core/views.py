@@ -1,7 +1,7 @@
 # core/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
@@ -100,3 +100,8 @@ class CustomLoginView(LoginView):
     but redirects using LOGIN_REDIRECT_URL.
     """
     template_name = 'core/login.html'
+
+def custom_logout(request):
+    logout(request)
+    messages.success(request, "You have been logged out successfully.")
+    return redirect('login')
