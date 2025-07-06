@@ -69,7 +69,7 @@ ROOT_URLCONF = 'worklogix_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'core' / 'templates'],git 
+        'DIRS': [BASE_DIR / 'core' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -142,4 +142,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirect-after-login/'
+LOGOUT_REDIRECT_URL = '/login/'
 
