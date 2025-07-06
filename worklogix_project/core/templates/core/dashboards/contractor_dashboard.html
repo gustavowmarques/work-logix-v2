@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Contractor Dashboard</h2>
+  <p>Welcome, {{ request.user.username }} ({{ request.user.get_role_display }})</p>
+{% endblock %}

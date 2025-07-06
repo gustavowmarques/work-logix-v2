@@ -1,21 +1,41 @@
 # core/views.py
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.views import LoginView
+from django.contrib import messages
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
 
 @admin_required
 def admin_dashboard(request):
+    """
+    View for Admin dashboard.
+    Only accessible by users with the 'admin' role.
+    """
     return render(request, 'core/dashboards/admin_dashboard.html')
 
 @property_manager_required
 def pm_dashboard(request):
+    """
+    View for Property Manager dashboard.
+    Only accessible by users with the 'pm' role.
+    """
     return render(request, 'core/dashboards/pm_dashboard.html')
 
 @contractor_required
 def contractor_dashboard(request):
+    """
+    View for Contractor dashboard.
+    Only accessible by users with the 'contractor' role.
+    """
     return render(request, 'core/dashboards/contractor_dashboard.html')
 
 @assistant_required
 def assistant_dashboard(request):
+    """
+    View for Assistant dashboard.
+    Only accessible by users with the 'assistant' role.
+    """
     return render(request, 'core/dashboards/assistant_dashboard.html')
 
 def redirect_after_login(request):
@@ -33,3 +53,25 @@ def redirect_after_login(request):
         return redirect('assistant_dashboard')
     else:
         return redirect('admin:index')  # fallback
+    
+def custom_login(request):
+    """
+    Handles user login and redirects to the appropriate dashboard.
+    """
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('redirect_after_login')  # Defined already
+        else:
+            messages.error(request, "Invalid username or password.")
+    return render(request, 'core/login.html')
+
+class CustomLoginView(LoginView):
+    """
+    Custom login view that uses Django’s built-in auth system
+    but redirects using LOGIN_REDIRECT_URL.
+    """
+    template_name = 'core/login.html'
