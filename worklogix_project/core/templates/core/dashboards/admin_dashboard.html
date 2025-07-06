@@ -1,6 +1,42 @@
 {% extends "base.html" %}
-
 {% block content %}
-  <h2>Admin Dashboard</h2>
-  <p>Welcome, {{ request.user.username }} ({{ request.user.get_role_display }})</p>
+<div class="container mt-4">
+  <h1 class="mb-4">Admin Dashboard</h1>
+
+  <h3>Property Management Agencies</h3>
+  <ul class="list-group mb-3">
+    {% for manager in managers %}
+      <li class="list-group-item">
+        <strong>{{ manager.name }}</strong><br>
+        {{ manager.email }} | {{ manager.phone }} | {{ manager.website }}
+      </li>
+    {% empty %}
+      <li class="list-group-item text-muted">No property managers found.</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Clients</h3>
+  <ul class="list-group mb-3">
+    {% for client in clients %}
+      <li class="list-group-item">
+        <strong>{{ client.name }}</strong><br>
+        {{ client.address }} | {{ client.email }}
+      </li>
+    {% empty %}
+      <li class="list-group-item text-muted">No clients found.</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Contractors</h3>
+  <ul class="list-group">
+    {% for contractor in contractors %}
+      <li class="list-group-item">
+        <strong>{{ contractor.name }}</strong><br>
+        {{ contractor.phone }} | {{ contractor.email }}
+      </li>
+    {% empty %}
+      <li class="list-group-item text-muted">No contractors found.</li>
+    {% endfor %}
+  </ul>
+</div>
 {% endblock %}

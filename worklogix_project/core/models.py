@@ -3,31 +3,22 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 
+    # Define the available user roles for this system
+ROLE_CHOICES = [
+    ('admin', 'Admin'),           # Superuser with full control
+    ('pm', 'Property Manager'),   # Manages companies and work orders
+    ('contractor', 'Contractor'), # Performs assigned work
+    ('assistant', 'Assistant'),   # View-only role, can message PM/Admin
+]
+
 # Custom user model extending Django's AbstractUser
 class CustomUser(AbstractUser):
-    # Define the available user roles for this system
-    ROLE_CHOICES = [
-        ('admin', 'Admin'),           # Superuser with full control
-        ('pm', 'Property Manager'),   # Manages companies and work orders
-        ('contractor', 'Contractor'), # Performs assigned work
-        ('assistant', 'Assistant'),   # View-only role, can message PM/Admin
-    ]
+    """
+    Extends Django's AbstractUser model to include a 'role' and a link to the user's company.
+    """
 
-    # Role field to assign a type to each user
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES=[
-        ('admin', 'Admin'),
-        ('pm', 'Property Manager'),
-        ('contractor', 'Contractor'),
-        ('assistant', 'Assistant'),
-    ])
-
-    company = models.ForeignKey(
-        Company,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        help_text="Associate user with a company (e.g., PM agency or contractor)."
-    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    company = models.ForeignKey('Company', null=True, blank=True, on_delete=models.SET_NULL, related_name='users')
 
     # Display user as "username (Role)" in the admin or elsewhere
     def __str__(self):
@@ -36,9 +27,8 @@ class CustomUser(AbstractUser):
 
 class Company(models.Model):
     """
-    Represents a company, which can be either:
-    - A Property Manager Agency
-    - A Contractor company
+    Represents any company in the system: a property management agency, a contractor, or a client (building).
+    Role is defined via the boolean flags below.
     """
 
     COMPANY_TYPES = [
@@ -47,11 +37,16 @@ class Company(models.Model):
     ]
 
     name = models.CharField(max_length=255)
-    company_type = models.CharField(max_length=20, choices=COMPANY_TYPES)
     address = models.TextField(blank=True, null=True)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
     website = models.URLField(blank=True, null=True)
+
+    # Flags for role-based identification
+    is_contractor = models.BooleanField(default=False, help_text="Check if this company is a contractor")
+    is_client = models.BooleanField(default=False, help_text="Check if this company is a client (a managed building)")
+    is_property_manager = models.BooleanField(default=False, help_text="Check if this company is a PM agency")
+
 
     class Meta:
         verbose_name_plural = "Companies"

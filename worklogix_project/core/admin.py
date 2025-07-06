@@ -18,7 +18,8 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ['name', 'is_contractor', 'email']
+    list_display = ['name', 'is_contractor', 'is_client', 'is_property_manager']
+    list_filter = ['is_contractor', 'is_client', 'is_property_manager']
 
 @admin.register(WorkOrder)
 class WorkOrderAdmin(admin.ModelAdmin):

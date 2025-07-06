@@ -5,42 +5,67 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
+from .models import Client, Company
 
 @admin_required
 def admin_dashboard(request):
     """
     View for Admin dashboard.
     Only accessible by users with the 'admin' role.
+    Admins can see all companies by type
     """
-    return render(request, 'core/dashboards/admin_dashboard.html')
+    contractors = Company.objects.filter(is_contractor=True)
+    clients = Company.objects.filter(is_client=True)
+    managers = Company.objects.filter(is_property_manager=True)
+    return render(request, 'core/dashboards/admin_dashboard.html', {
+        'contractors': contractors,
+        'clients': clients,
+        'managers': managers,
+    })
 
 @property_manager_required
 def pm_dashboard(request):
     """
-    View for Property Manager dashboard.
-    Only accessible by users with the 'pm' role.
+    Property Manager dashboard view.
+    Property Managers can see all assigned clients and contractors
     """
-    return render(request, 'core/dashboards/pm_dashboard.html')
+    contractors = Company.objects.filter(is_contractor=True)
+    clients = Company.objects.filter(is_client=True)
+    return render(request, 'core/dashboards/pm_dashboard.html', {
+        'contractors': contractors,
+        'clients': clients,
+    })
 
 @contractor_required
 def contractor_dashboard(request):
     """
     View for Contractor dashboard.
     Only accessible by users with the 'contractor' role.
+    Contractors may only see their own company info for now
     """
-    return render(request, 'core/dashboards/contractor_dashboard.html')
+    my_company = request.user.company
+    return render(request, 'core/dashboards/contractor_dashboard.html', {
+        'my_company': my_company,
+    })
 
 @assistant_required
 def assistant_dashboard(request):
     """
     View for Assistant dashboard.
     Only accessible by users with the 'assistant' role.
+    Assistants may see a read-only list of clients/contractors
     """
-    return render(request, 'core/dashboards/assistant_dashboard.html')
+    clients = Company.objects.filter(is_client=True)
+    contractors = Company.objects.filter(is_contractor=True)
+    return render(request, 'core/dashboards/assistant_dashboard.html', {
+        'clients': clients,
+        'contractors': contractors,
+    })
 
 def redirect_after_login(request):
     """
     Redirects the user to the appropriate dashboard based on their role.
+    Assistants may see a read-only list of clients/contractors
     """
     user = request.user
     if user.role == 'admin':
