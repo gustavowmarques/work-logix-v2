@@ -5,15 +5,21 @@ from .models import CustomUser, Company, Client, WorkOrder
 # Register the CustomUser model using Django's built-in UserAdmin layout
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
+    model = CustomUser
+
     # Displayed in the user list
-    list_display = ('username', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'is_active')
-    
-    # Fields used in the user form
-    fieldsets = UserAdmin.fieldsets + (
-        ('Role Info', {'fields': ('role',)}),
+    list_display = (
+        'username', 'email', 'first_name', 'last_name', 'role', 'company', 'is_staff', 'is_active'
     )
+    
+    # Fields used in the user edit form
+    fieldsets = UserAdmin.fieldsets + (
+        ('Role Info', {'fields': ('role', 'company')}),
+    )
+
+    # Fields shown in the "Add user" form
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Role Info', {'fields': ('role',)}),
+        ('Role Info', {'fields': ('role', 'company')}),
     )
 
 @admin.register(Company)

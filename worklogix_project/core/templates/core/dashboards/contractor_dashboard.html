@@ -1,18 +1,17 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container mt-4">
-  <h1 class="mb-4">Contractor Dashboard</h1>
+{% extends "core/base.html" %}
 
-  <div class="card">
-    <div class="card-header">
-      <strong>Your Company Info</strong>
-    </div>
+{% block title %}Contractor Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Contractor Dashboard</h2>
+
+<div class="card">
+    <div class="card-header bg-success text-white">Your Company Info</div>
     <div class="card-body">
-      <p><strong>Name:</strong> {{ my_company.name }}</p>
-      <p><strong>Phone:</strong> {{ my_company.phone }}</p>
-      <p><strong>Email:</strong> {{ my_company.email }}</p>
-      <p><strong>Website:</strong> {{ my_company.website }}</p>
+        <p><strong>Name:</strong> {{ company.name }}</p>
+        <p><strong>Phone:</strong> {{ company.phone }}</p>
+        <p><strong>Email:</strong> {{ company.email }}</p>
+        <p><strong>Website:</strong> {{ company.website }}</p>
     </div>
-  </div>
 </div>
 {% endblock %}

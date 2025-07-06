@@ -18,7 +18,15 @@ class CustomUser(AbstractUser):
     """
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    company = models.ForeignKey('Company', null=True, blank=True, on_delete=models.SET_NULL, related_name='users')
+    
+    #Connect each user to a Company
+    company = models.ForeignKey(
+        'Company',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users'
+    )
 
     # Display user as "username (Role)" in the admin or elsewhere
     def __str__(self):

@@ -1,30 +1,35 @@
-{% extends "base.html" %}
+{% extends "core/base.html" %}
+
+{% block title %}Property Manager Dashboard{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h1 class="mb-4">Property Manager Dashboard</h1>
+<h2 class="mb-4">Welcome, Property Manager</h2>
 
-  <h3>Your Managed Clients</h3>
-  <ul class="list-group mb-3">
-    {% for client in clients %}
-      <li class="list-group-item">
-        <strong>{{ client.name }}</strong><br>
-        {{ client.address }}
-      </li>
-    {% empty %}
-      <li class="list-group-item text-muted">No clients assigned.</li>
-    {% endfor %}
-  </ul>
+<div class="card mb-4">
+    <div class="card-header">Your Managed Clients</div>
+    <ul class="list-group list-group-flush">
+        {% for client in clients %}
+        <li class="list-group-item">
+            <strong>{{ client.name }}</strong><br>
+            {{ client.address }}
+        </li>
+        {% empty %}
+        <li class="list-group-item">No clients assigned.</li>
+        {% endfor %}
+    </ul>
+</div>
 
-  <h3>Available Contractors</h3>
-  <ul class="list-group">
-    {% for contractor in contractors %}
-      <li class="list-group-item">
-        <strong>{{ contractor.name }}</strong><br>
-        {{ contractor.phone }} | {{ contractor.email }}
-      </li>
-    {% empty %}
-      <li class="list-group-item text-muted">No contractors available.</li>
-    {% endfor %}
-  </ul>
+<div class="card">
+    <div class="card-header">Available Contractors</div>
+    <ul class="list-group list-group-flush">
+        {% for contractor in contractors %}
+        <li class="list-group-item">
+            <strong>{{ contractor.name }}</strong><br>
+            {{ contractor.email }} | {{ contractor.phone }}
+        </li>
+        {% empty %}
+        <li class="list-group-item">No contractors available.</li>
+        {% endfor %}
+    </ul>
 </div>
 {% endblock %}
