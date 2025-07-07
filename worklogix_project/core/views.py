@@ -6,7 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
 from .models import Client, Company
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, CompanyCreationForm, ClientCreationForm
 
 @admin_required
 def admin_dashboard(request):
@@ -127,3 +127,35 @@ def create_user(request):
     companies = Company.objects.all()
 
     return render(request, 'core/create_user.html', {'form': form, 'companies': companies})
+
+@admin_required
+def create_company(request):
+    """
+    Allows Admins to create a new company (contractor, PM, or client).
+    """
+    if request.method == 'POST':
+        form = CompanyCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Company created successfully.")
+            return redirect('admin_dashboard')
+    else:
+        form = CompanyCreationForm()
+
+    return render(request, 'core/create_company.html', {'form': form})
+
+@admin_required
+def create_client(request):
+    """
+    Allows Admins to create new client sites and assign them to a property manager agency.
+    """
+    if request.method == 'POST':
+        form = ClientCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Client created successfully.")
+            return redirect('admin_dashboard')
+    else:
+        form = ClientCreationForm()
+
+    return render(request, 'core/create_client.html', {'form': form})
