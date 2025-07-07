@@ -123,4 +123,7 @@ def create_user(request):
     else:
         form = CustomUserCreationForm()  # Show empty form for GET request
 
-    return render(request, 'core/create_user.html', {'form': form})
+    # Ensure companies are passed
+    companies = Company.objects.all()
+
+    return render(request, 'core/create_user.html', {'form': form, 'companies': companies})
