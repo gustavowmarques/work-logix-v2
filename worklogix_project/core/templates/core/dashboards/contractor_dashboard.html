@@ -1,17 +1,31 @@
-{% extends "core/base.html" %}
-
+{% extends 'core/base.html' %}
 {% block title %}Contractor Dashboard{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Contractor Dashboard</h2>
+<div class="container">
+  <h1 class="mb-4">Contractor Dashboard</h1>
 
-<div class="card">
-    <div class="card-header bg-success text-white">Your Company Info</div>
+  <div class="card border-primary shadow-sm">
     <div class="card-body">
-        <p><strong>Name:</strong> {{ company.name }}</p>
-        <p><strong>Phone:</strong> {{ company.phone }}</p>
-        <p><strong>Email:</strong> {{ company.email }}</p>
-        <p><strong>Website:</strong> {{ company.website }}</p>
+      <h5 class="card-title">Company Information</h5>
+      {% if my_company %}
+        <ul class="list-group">
+          <li class="list-group-item"><strong>Name:</strong> {{ my_company.name }}</li>
+          <li class="list-group-item"><strong>Email:</strong> {{ my_company.email }}</li>
+          <li class="list-group-item"><strong>Phone:</strong> {{ my_company.phone }}</li>
+          <li class="list-group-item"><strong>Website:</strong> 
+            {% if my_company.website %}
+              <a href="{{ my_company.website }}" target="_blank">{{ my_company.website }}</a>
+            {% else %}
+              <span class="text-muted">Not provided</span>
+            {% endif %}
+          </li>
+          <li class="list-group-item"><strong>Address:</strong> {{ my_company.address|default:"Not provided" }}</li>
+        </ul>
+      {% else %}
+        <p class="text-danger">Company information is not available. Please contact an administrator.</p>
+      {% endif %}
     </div>
+  </div>
 </div>
 {% endblock %}

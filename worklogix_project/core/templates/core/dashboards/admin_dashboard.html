@@ -1,43 +1,52 @@
-{% extends "core/base.html" %}
-
+{% extends 'core/base.html' %}
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Admin Dashboard</h2>
+<div class="container">
+  <h1 class="mb-4">Admin Dashboard</h1>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">All Companies</div>
-            <ul class="list-group list-group-flush">
-                {% for company in companies %}
-                <li class="list-group-item">
-                    <strong>{{ company.name }}</strong><br>
-                    {% if company.is_property_manager %}PM Agency{% endif %}
-                    {% if company.is_client %}Client{% endif %}
-                    {% if company.is_contractor %}Contractor{% endif %}<br>
-                    {{ company.email }} | {{ company.phone }}
-                </li>
-                {% empty %}
-                <li class="list-group-item">No companies found.</li>
-                {% endfor %}
-            </ul>
+  <div class="row g-4">
+    <!-- Companies Card -->
+    <div class="col-md-4">
+      <div class="card border-primary shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title">Companies</h5>
+          <p class="card-text">
+            <strong>Property Managers:</strong> {{ managers.count }}<br>
+            <strong>Contractors:</strong> {{ contractors.count }}<br>
+            <strong>Clients:</strong> {{ clients.count }}
+          </p>
+          <a href="{% url 'admin:index' %}" class="btn btn-primary">Manage Companies</a>
         </div>
+      </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header bg-secondary text-white">Clients</div>
-            <ul class="list-group list-group-flush">
-                {% for client in clients %}
-                <li class="list-group-item">
-                    <strong>{{ client.name }}</strong><br>{{ client.address }}
-                </li>
-                {% empty %}
-                <li class="list-group-item">No clients found.</li>
-                {% endfor %}
-            </ul>
+    <!-- Users Management -->
+    <div class="col-md-4">
+      <div class="card border-success shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title">Users</h5>
+          <p class="card-text">
+            Create and assign roles to users (PMs, Contractors, Assistants).
+          </p>
+          <a href="{% url 'admin:core_customuser_changelist' %}" class="btn btn-success">Manage Users</a>
+          <a href="{% url 'create_user' %}" class="btn btn-primary">Create New User</a>
         </div>
+      </div>
     </div>
+
+    <!-- Work Orders -->
+    <div class="col-md-4">
+      <div class="card border-warning shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title">Work Orders</h5>
+          <p class="card-text">
+            View and track submitted work orders across all companies.
+          </p>
+          <a href="{% url 'admin:core_workorder_changelist' %}" class="btn btn-warning">View Work Orders</a>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

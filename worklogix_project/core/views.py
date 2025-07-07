@@ -1,11 +1,12 @@
-# core/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.views import LoginView
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
 from .models import Client, Company
+from .forms import CustomUserCreationForm
 
 @admin_required
 def admin_dashboard(request):
@@ -105,3 +106,21 @@ def custom_logout(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
+
+@admin_required
+def create_user(request):
+    """
+    Allows Admins to create new users with specific roles and companies.
+    Handles both GET (show form) and POST (form submission) requests.
+    """
+    if request.method == 'POST':
+        # Bind form with POST data
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()  # Save new user to the database
+            messages.success(request, "User created successfully.")
+            return redirect('admin_dashboard')
+    else:
+        form = CustomUserCreationForm()  # Show empty form for GET request
+
+    return render(request, 'core/create_user.html', {'form': form})

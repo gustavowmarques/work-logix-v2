@@ -1,35 +1,52 @@
-{% extends "core/base.html" %}
-
+{% extends 'core/base.html' %}
 {% block title %}Property Manager Dashboard{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Welcome, Property Manager</h2>
+<div class="container">
+  <h1 class="mb-4">Property Manager Dashboard</h1>
 
-<div class="card mb-4">
-    <div class="card-header">Your Managed Clients</div>
-    <ul class="list-group list-group-flush">
-        {% for client in clients %}
-        <li class="list-group-item">
-            <strong>{{ client.name }}</strong><br>
-            {{ client.address }}
-        </li>
-        {% empty %}
-        <li class="list-group-item">No clients assigned.</li>
-        {% endfor %}
-    </ul>
-</div>
+  <div class="row g-4">
+    <!-- Assigned Clients Card -->
+    <div class="col-md-6">
+      <div class="card border-info shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title">Assigned Clients</h5>
+          <p class="card-text">
+            You are currently managing <strong>{{ clients.count }}</strong> client site(s).
+          </p>
+          {% if clients %}
+            <ul class="list-group">
+              {% for client in clients %}
+              <li class="list-group-item">{{ client.name }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No clients assigned yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
 
-<div class="card">
-    <div class="card-header">Available Contractors</div>
-    <ul class="list-group list-group-flush">
-        {% for contractor in contractors %}
-        <li class="list-group-item">
-            <strong>{{ contractor.name }}</strong><br>
-            {{ contractor.email }} | {{ contractor.phone }}
-        </li>
-        {% empty %}
-        <li class="list-group-item">No contractors available.</li>
-        {% endfor %}
-    </ul>
+    <!-- Contractors Card -->
+    <div class="col-md-6">
+      <div class="card border-secondary shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="card-title">Available Contractors</h5>
+          <p class="card-text">
+            You have access to <strong>{{ contractors.count }}</strong> contractor(s).
+          </p>
+          {% if contractors %}
+            <ul class="list-group">
+              {% for contractor in contractors %}
+              <li class="list-group-item">{{ contractor.name }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No contractors available yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
