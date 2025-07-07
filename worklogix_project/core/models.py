@@ -98,7 +98,7 @@ class Client(models.Model):
     company = models.ForeignKey(
         Company,
         on_delete=models.CASCADE,
-        limit_choices_to={'company_type': 'pm_agency'},
+        limit_choices_to={'is_property_manager': True},
         help_text="Select the Property Manager Agency that manages this client site.",
     )
     notes = models.TextField(blank=True, null=True)

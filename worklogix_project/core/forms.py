@@ -41,5 +41,9 @@ class ClientCreationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Limit company choices to Property Manager agencies only
+        # Limit choices to only property managers
         self.fields['company'].queryset = Company.objects.filter(is_property_manager=True)
+
+        # Tweak widget sizes
+        self.fields['address'].widget = forms.Textarea(attrs={'rows': 3, 'class': 'form-control'})
+        self.fields['notes'].widget = forms.Textarea(attrs={'rows': 3, 'class': 'form-control'})
