@@ -1,28 +1,40 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
-from .models import Client, Company
+from .models import Client, Company, WorkOrder
 from .forms import CustomUserCreationForm, CompanyCreationForm, ClientCreationForm
+
+User = get_user_model()
 
 @admin_required
 def admin_dashboard(request):
     """
     View for Admin dashboard.
-    Only accessible by users with the 'admin' role.
-    Admins can see all companies by type
+    Admins can see counts for companies, users, and work orders.
     """
+    # Company counts by type
     contractors = Company.objects.filter(is_contractor=True)
-    clients = Company.objects.filter(is_client=True)
     managers = Company.objects.filter(is_property_manager=True)
+    clients = Company.objects.filter(is_client=True)
+
+    # Add users and work orders to context
+    users = User.objects.all()
+    open_work_orders = WorkOrder.objects.filter(status='open')
+    completed_work_orders = WorkOrder.objects.filter(status='completed')
+
     return render(request, 'core/dashboards/admin_dashboard.html', {
         'contractors': contractors,
-        'clients': clients,
         'managers': managers,
+        'clients': clients,
+        'users': users,
+        'open_work_orders': open_work_orders,
+        'completed_work_orders': completed_work_orders,
     })
+
 
 @property_manager_required
 def pm_dashboard(request):
