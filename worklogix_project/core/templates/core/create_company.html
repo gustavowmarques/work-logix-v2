@@ -8,26 +8,45 @@
       <h4 class="mb-0">Create New Company</h4>
     </div>
     <div class="card-body">
+
+      <!-- Flash messages -->
       {% if messages %}
         {% for message in messages %}
           <div class="alert alert-{{ message.tags }}">{{ message }}</div>
         {% endfor %}
       {% endif %}
 
+      <!-- Form start -->
       <form method="post">
         {% csrf_token %}
         {% for field in form %}
-          <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.help_text %}
-              <div class="form-text">{{ field.help_text }}</div>
-            {% endif %}
-            {% if field.errors %}
-              <div class="text-danger small">{{ field.errors }}</div>
-            {% endif %}
-          </div>
+          {% if field.field.widget.input_type == "checkbox" %}
+            <div class="form-check mb-2">
+              {{ field }}
+              <label class="form-check-label" for="{{ field.id_for_label }}">
+                {{ field.label }}
+              </label>
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
+              {% if field.errors %}
+                <div class="text-danger small">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
+              {% if field.errors %}
+                <div class="text-danger small">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+          {% endif %}
         {% endfor %}
+        
         <button type="submit" class="btn btn-success">Create Company</button>
         <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
       </form>
