@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+{% block title %}Manage Clients{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Manage Clients</h5>
+      <!-- Link to create new client site -->
+      <a href="{% url 'create_client' %}" class="btn btn-light btn-sm">Create New Client</a>
+    </div>
+    <div class="card-body">
+      <!-- Live search filter input -->
+      <input type="text" class="form-control mb-3" id="searchInput" placeholder="Search clients...">
+      <div class="table-responsive">
+        <table class="table table-striped" id="clientTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Address</th>
+              <th>Managed By (PM)</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for client in clients %}
+              <tr>
+                <td>{{ client.name }}</td>
+                <td>{{ client.address }}</td>
+                <td>{{ client.company.name }}</td>
+                <td>{{ client.notes|truncatechars:50 }}</td>
+                <td>
+                    <a href="{% url 'view_client' client.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                    <a href="{% url 'edit_client' client.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <a href="{% url 'delete_client' client.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5">No clients found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // JavaScript for live filtering
+  const searchInput = document.getElementById("searchInput");
+  const rows = document.querySelectorAll("#clientTable tbody tr");
+
+  searchInput.addEventListener("keyup", function () {
+    const query = this.value.toLowerCase();
+    rows.forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(query) ? "" : "none";
+    });
+  });
+</script>
+{% endblock %}

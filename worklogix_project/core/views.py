@@ -1,27 +1,26 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.views import LoginView
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth.views import LoginView
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
-from .models import Client, Company, WorkOrder
+from .models import Client, Company, WorkOrder, CustomUser
 from .forms import CustomUserCreationForm, CompanyCreationForm, ClientCreationForm
 
 User = get_user_model()
 
+# ============================================================
+# Dashboard Views
+# ============================================================
+
 @admin_required
 def admin_dashboard(request):
     """
-    View for Admin dashboard.
-    Admins can see counts for companies, users, and work orders.
+    Admin dashboard view showing company/user/work order metrics.
     """
-    # Company counts by type
     contractors = Company.objects.filter(is_contractor=True)
     managers = Company.objects.filter(is_property_manager=True)
     clients = Company.objects.filter(is_client=True)
-
-    # Add users and work orders to context
     users = User.objects.all()
     open_work_orders = WorkOrder.objects.filter(status='open')
     completed_work_orders = WorkOrder.objects.filter(status='completed')
@@ -35,12 +34,10 @@ def admin_dashboard(request):
         'completed_work_orders': completed_work_orders,
     })
 
-
 @property_manager_required
 def pm_dashboard(request):
     """
-    Property Manager dashboard view.
-    Property Managers can see all assigned clients and contractors
+    Property Manager dashboard (assigned contractors & clients).
     """
     contractors = Company.objects.filter(is_contractor=True)
     clients = Company.objects.filter(is_client=True)
@@ -52,9 +49,7 @@ def pm_dashboard(request):
 @contractor_required
 def contractor_dashboard(request):
     """
-    View for Contractor dashboard.
-    Only accessible by users with the 'contractor' role.
-    Contractors may only see their own company info for now
+    Contractor dashboard (company-specific view).
     """
     my_company = request.user.company
     return render(request, 'core/dashboards/contractor_dashboard.html', {
@@ -64,9 +59,7 @@ def contractor_dashboard(request):
 @assistant_required
 def assistant_dashboard(request):
     """
-    View for Assistant dashboard.
-    Only accessible by users with the 'assistant' role.
-    Assistants may see a read-only list of clients/contractors
+    Assistant dashboard (read-only overview).
     """
     clients = Company.objects.filter(is_client=True)
     contractors = Company.objects.filter(is_contractor=True)
@@ -75,10 +68,13 @@ def assistant_dashboard(request):
         'contractors': contractors,
     })
 
+# ============================================================
+# Login / Logout / Redirect
+# ============================================================
+
 def redirect_after_login(request):
     """
-    Redirects the user to the appropriate dashboard based on their role.
-    Assistants may see a read-only list of clients/contractors
+    Redirect user to appropriate dashboard after login.
     """
     user = request.user
     if user.role == 'admin':
@@ -89,85 +85,161 @@ def redirect_after_login(request):
         return redirect('contractor_dashboard')
     elif user.role == 'assistant':
         return redirect('assistant_dashboard')
-    else:
-        return redirect('admin:index')  # fallback
-    
-def custom_login(request):
-    """
-    Handles user login and redirects to the appropriate dashboard.
-    """
-    if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            return redirect('redirect_after_login')  # Defined already
-        else:
-            messages.error(request, "Invalid username or password.")
-    return render(request, 'core/login.html')
+    return redirect('admin:index')  # fallback
 
 class CustomLoginView(LoginView):
     """
-    Custom login view that uses Django’s built-in auth system
-    but redirects using LOGIN_REDIRECT_URL.
+    Login form using Django’s built-in system with custom template.
     """
     template_name = 'core/login.html'
 
 def custom_logout(request):
+    """
+    Logs the user out and redirects to login page with message.
+    """
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
 
+# ============================================================
+# Creation Views (Add)
+# ============================================================
+
 @admin_required
 def create_user(request):
     """
-    Allows Admins to create new users with specific roles and companies.
-    Handles both GET (show form) and POST (form submission) requests.
+    Admins can create users and assign to a company and role.
     """
-    if request.method == 'POST':
-        # Bind form with POST data
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()  # Save new user to the database
-            messages.success(request, "User created successfully.")
-            return redirect('admin_dashboard')
-    else:
-        form = CustomUserCreationForm()  # Show empty form for GET request
+    form = CustomUserCreationForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "User created successfully.")
+        return redirect('manage_users')
 
-    # Ensure companies are passed
-    companies = Company.objects.all()
-
-    return render(request, 'core/create_user.html', {'form': form, 'companies': companies})
+    return render(request, 'core/create_user.html', {
+        'form': form,
+        'companies': Company.objects.all()
+    })
 
 @admin_required
 def create_company(request):
     """
-    Allows Admins to create a new company (contractor, PM, or client).
+    Admins can create companies.
     """
-    if request.method == 'POST':
-        form = CompanyCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Company created successfully.")
-            return redirect('admin_dashboard')
-    else:
-        form = CompanyCreationForm()
+    form = CompanyCreationForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Company created successfully.")
+        return redirect('manage_companies')
 
     return render(request, 'core/create_company.html', {'form': form})
 
 @admin_required
 def create_client(request):
     """
-    Allows Admins to create new client sites and assign them to a property manager agency.
+    Admins can create client sites and assign PM company.
     """
-    if request.method == 'POST':
-        form = ClientCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Client created successfully.")
-            return redirect('admin_dashboard')
-    else:
-        form = ClientCreationForm()
+    form = ClientCreationForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Client created successfully.")
+        return redirect('manage_clients')
 
     return render(request, 'core/create_client.html', {'form': form})
+
+# ============================================================
+# Manage Views (List/Overview)
+# ============================================================
+
+@admin_required
+def manage_users(request):
+    users = CustomUser.objects.select_related('company').all()
+    return render(request, 'core/admin/manage_users.html', {'users': users})
+
+@admin_required
+def manage_companies(request):
+    companies = Company.objects.all()
+    return render(request, 'core/admin/manage_companies.html', {'companies': companies})
+
+@admin_required
+def manage_clients(request):
+    clients = Client.objects.select_related('company').all()
+    return render(request, 'core/admin/manage_clients.html', {'clients': clients})
+
+# ============================================================
+# CRUD: Users
+# ============================================================
+
+@admin_required
+def view_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    return render(request, 'core/admin/view_user.html', {'user': user})
+
+@admin_required
+def edit_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    form = CustomUserCreationForm(request.POST or None, instance=user)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "User updated successfully.")
+        return redirect('manage_users')
+    return render(request, 'core/admin/edit_user.html', {'form': form})
+
+@admin_required
+def delete_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    user.delete()
+    messages.success(request, "User deleted.")
+    return redirect('manage_users')
+
+# ============================================================
+# CRUD: Clients
+# ============================================================
+
+@admin_required
+def view_client(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+    return render(request, 'core/admin/view_client.html', {'client': client})
+
+@admin_required
+def edit_client(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+    form = ClientCreationForm(request.POST or None, instance=client)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Client updated successfully.")
+        return redirect('manage_clients')
+    return render(request, 'core/admin/edit_client.html', {'form': form})
+
+@admin_required
+def delete_client(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+    client.delete()
+    messages.success(request, "Client deleted.")
+    return redirect('manage_clients')
+
+# ============================================================
+# CRUD: Companies
+# ============================================================
+
+@admin_required
+def view_company(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+    return render(request, 'core/admin/view_company.html', {'company': company})
+
+@admin_required
+def edit_company(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+    form = CompanyCreationForm(request.POST or None, instance=company)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Company updated successfully.")
+        return redirect('manage_companies')
+    return render(request, 'core/admin/edit_company.html', {'form': form})
+
+@admin_required
+def delete_company(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+    company.delete()
+    messages.success(request, "Company deleted.")
+    return redirect('manage_companies')
