@@ -1,8 +1,8 @@
 from django import forms
-from .models import CustomUser, Company, Client
+from .models import CustomUser, Company, Client, WorkOrder, BusinessType, Unit
 from django.contrib.auth.forms import UserCreationForm
 
-from django.forms import CheckboxInput, Textarea
+from django.forms import CheckboxInput, Textarea, ModelChoiceField, DateInput
 
 class StyledModelForm(forms.ModelForm):
     """
@@ -63,3 +63,51 @@ class ClientCreationForm(StyledModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['company'].queryset = Company.objects.filter(is_property_manager=True)
+
+class WorkOrderForm(forms.ModelForm):
+    """
+    Form for Admins or Property Managers to create Work Orders.
+    Includes logic to filter contractors by business type.
+    """
+
+    class Meta:
+        model = WorkOrder
+        fields = [
+            'title',
+            'description',
+            'priority',
+            'business_type',
+            'client',
+            'unit',
+            'preferred_contractor',
+            'second_contractor',
+            'due_date',
+            'attachment',
+        ]
+        widgets = {
+            'description': Textarea(attrs={'rows': 4}),
+            'due_date': DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Apply Bootstrap 5 styling
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs.update({'class': 'form-check-input'})
+            else:
+                field.widget.attrs.update({'class': 'form-control'})
+
+        # Limit clients to those registered
+        self.fields['client'].queryset = Client.objects.all()
+
+        # Limit business types
+        self.fields['business_type'].queryset = BusinessType.objects.all()
+
+        # Preferred and second contractors will be filtered in the view
+        self.fields['preferred_contractor'].queryset = Company.objects.none()
+        self.fields['second_contractor'].queryset = Company.objects.none()
+
+        # Optional unit field
+        self.fields['unit'].queryset = Unit.objects.all()
