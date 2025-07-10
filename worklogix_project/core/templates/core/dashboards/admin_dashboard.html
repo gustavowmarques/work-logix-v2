@@ -55,6 +55,7 @@
             <li><strong>Completed:</strong> {{ completed_work_orders.count }}</li>
           </ul>
           <a href="{% url 'admin:core_workorder_changelist' %}" class="btn btn-warning btn-sm">View Work Orders</a>
+          <a href="{% url 'create_work_order' %}" class="btn btn-primary btn-sm">Create Work Order</a>
         </div>
       </div>
     </div>

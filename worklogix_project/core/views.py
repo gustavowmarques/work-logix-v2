@@ -4,8 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
-from .models import Client, Company, WorkOrder, CustomUser
-from .forms import CustomUserCreationForm, CompanyCreationForm, ClientCreationForm
+from .models import Client, Company, WorkOrder, CustomUser, BusinessType, Unit
+from .forms import CustomUserCreationForm, CompanyCreationForm, ClientCreationForm, WorkOrderForm
+from django.utils.timezone import now
 
 User = get_user_model()
 
@@ -92,6 +93,11 @@ class CustomLoginView(LoginView):
     Login form using Django’s built-in system with custom template.
     """
     template_name = 'core/login.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('redirect_after_login')
+        return super().dispatch(request, *args, **kwargs)
 
 def custom_logout(request):
     """
@@ -146,6 +152,41 @@ def create_client(request):
         return redirect('manage_clients')
 
     return render(request, 'core/create_client.html', {'form': form})
+
+@property_manager_required
+def my_work_orders(request):
+    """
+    Property Managers see only work orders they created.
+    """
+    work_orders = WorkOrder.objects.filter(created_by=request.user)
+    return render(request, 'core/property_manager/my_work_orders.html', {
+        'work_orders': work_orders
+    })
+
+@login_required
+def create_work_order(request):
+    """
+    Allows Admins or Property Managers to create a work order.
+    Filters contractors based on selected business type.
+    """
+    if request.method == 'POST':
+        form = WorkOrderForm(request.POST, request.FILES)
+        if form.is_valid():
+            work_order = form.save(commit=False)
+            work_order.created_by = request.user
+            work_order.status = 'new'
+            work_order.save()
+            messages.success(request, "Work order created successfully.")
+            return redirect('admin_dashboard' if request.user.role == 'admin' else 'pm_dashboard')
+    else:
+        form = WorkOrderForm()
+
+    # Filter contractors dynamically based on business type (optional: JS later)
+    contractors = Company.objects.filter(is_contractor=True)
+    form.fields['preferred_contractor'].queryset = contractors
+    form.fields['second_contractor'].queryset = contractors
+
+    return render(request, 'core/create_work_order.html', {'form': form})
 
 # ============================================================
 # Manage Views (List/Overview)

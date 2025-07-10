@@ -1,0 +1,28 @@
+{% extends 'core/base.html' %}
+{% block title %}My Work Orders{% endblock %}
+
+{% block content %}
+<h2>My Work Orders</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Client</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Due Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in work_orders %}
+        <tr>
+            <td>{{ order.title }}</td>
+            <td>{{ order.client.name }}</td>
+            <td>{{ order.get_status_display }}</td>
+            <td>{{ order.get_priority_display }}</td>
+            <td>{{ order.due_date }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
