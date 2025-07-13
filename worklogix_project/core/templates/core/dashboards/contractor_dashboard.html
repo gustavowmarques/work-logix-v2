@@ -5,7 +5,8 @@
 <div class="container">
   <h1 class="mb-4">Contractor Dashboard</h1>
 
-  <div class="card border-primary shadow-sm">
+  <!-- Company Information -->
+  <div class="card border-primary shadow-sm mb-4">
     <div class="card-body">
       <h5 class="card-title">Company Information</h5>
       {% if my_company %}
@@ -24,6 +25,33 @@
         </ul>
       {% else %}
         <p class="text-danger">Company information is not available. Please contact an administrator.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Assigned Work Orders -->
+  <div class="card border-secondary shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">Assigned Work Orders</h5>
+      {% if my_assigned_orders %}
+        <ul class="list-group">
+          {% for work_order in my_assigned_orders %}
+            <li class="list-group-item">
+              <strong>{{ work_order.title }}</strong><br>
+              <small class="text-muted">Due: {{ work_order.due_date }}</small><br>
+              <span>Status: <strong>{{ work_order.get_status_display }}</strong></span><br>
+
+              {% if work_order.status == 'assigned' and work_order.assigned_contractor == request.user.company %}
+                <div class="mt-2">
+                  <a href="{% url 'accept_work_order' work_order.id %}" class="btn btn-success btn-sm">Accept</a>
+                  <a href="{% url 'reject_work_order' work_order.id %}" class="btn btn-danger btn-sm">Reject</a>
+                </div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">No work orders currently assigned to your company.</p>
       {% endif %}
     </div>
   </div>

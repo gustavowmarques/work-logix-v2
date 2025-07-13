@@ -63,4 +63,9 @@ urlpatterns = [
     # ===============================
     path('dashboard/work-orders/create/', views.create_work_order, name='create_work_order'),
     path('pm/work-orders/', views.my_work_orders, name='my_work_orders'),
+
+    # Contractor response to work orders
+    path('work-orders/<int:work_order_id>/accept/', views.accept_work_order, name='accept_work_order'),
+    path('work-orders/<int:work_order_id>/reject/', views.reject_work_order, name='reject_work_order'),
+
 ]

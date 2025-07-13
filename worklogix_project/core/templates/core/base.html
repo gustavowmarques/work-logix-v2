@@ -53,10 +53,13 @@
             <a href="#" class="nav-link text-white">My Work Orders</a>
           </li>
       
-        {% elif request.user.role == 'assistant' %}
-          <li class="nav-item">
-            <a href="{% url 'assistant_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'assistant_dashboard' %}active{% endif %}">Dashboard</a>
-          </li>
+          {% elif request.user.role == 'assistant' %}
+            <li class="nav-item">
+              <a href="{% url 'assistant_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'assistant_dashboard' %}active{% endif %}">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'my_work_orders' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'my_work_orders' %}active{% endif %}">My Work Orders</a>
+            </li>        
         {% endif %}
       
 

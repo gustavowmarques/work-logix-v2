@@ -25,4 +25,7 @@
         {% endfor %}
     </tbody>
 </table>
+
+work_orders.filter(status='returned_to_creator', created_by=request.user)
+
 {% endblock %}
