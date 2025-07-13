@@ -20,11 +20,14 @@
             Dashboard
           </a>
         </li>
-        <li class="nav-item">
-          <a href="{% url 'create_work_order' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'create_work_order' %}active{% endif %}">
-            Create Work Order
-          </a>
-        </li>
+        {% if request.user.role in 'admin property_manager assistant' %}
+          <li class="nav-item">
+            <a href="{% url 'create_work_order' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'create_work_order' %}active{% endif %}">
+              Create Work Order
+            </a>
+          </li>
+        {% endif %}
+
       
         {% if request.user.role == 'admin' %}
           <li class="nav-item">

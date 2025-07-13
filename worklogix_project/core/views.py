@@ -123,6 +123,9 @@ def create_work_order(request):
     """
     Allows Admins, PMs, or Assistants to create a Work Order.
     """
+    if request.user.role not in ['admin', 'property_manager', 'assistant']:
+        return HttpResponseForbidden("You are not allowed to create work orders.")
+    
     if request.method == 'POST':
         form = WorkOrderForm(request.POST, request.FILES)
         if form.is_valid():
