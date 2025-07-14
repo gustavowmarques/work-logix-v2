@@ -3,12 +3,12 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.utils.timezone import now
 
 from .decorators import property_manager_required, contractor_required, assistant_required, admin_required
 from .models import Client, Company, WorkOrder, CustomUser, BusinessType, Unit
-from .forms import CustomUserCreationForm, CompanyCreationForm, ClientCreationForm, WorkOrderForm
+from .forms import CustomUserCreationForm, CompanyCreationForm, ClientCreationForm, WorkOrderForm, UnitCreationForm
 
 User = get_user_model()
 
@@ -195,6 +195,17 @@ def reject_work_order(request, work_order_id):
     messages.success(request, "You have rejected the work order.")
     return redirect('contractor_dashboard')
 
+@login_required
+def load_units_for_client(request):
+    """
+    AJAX view to return available units for a given client ID.
+    Returns JSON used by the frontend to populate the unit dropdown.
+    """
+    client_id = request.GET.get('client_id')
+    units = Unit.objects.filter(client_id=client_id).order_by('name')
+    unit_list = [{'id': unit.id, 'name': unit.name} for unit in units]
+    return JsonResponse({'units': unit_list})
+
 # ============================================================
 # User/Company/Client Creation & Management
 # ============================================================
@@ -310,3 +321,47 @@ def delete_company(request, company_id):
     company.delete()
     messages.success(request, "Company deleted.")
     return redirect('manage_companies')
+
+@admin_required
+def create_unit(request):
+    """
+    Admin-only view to create a new unit and assign it to a client.
+    """
+    if request.method == 'POST':
+        form = UnitCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Unit created successfully.")
+            return redirect('admin_dashboard')
+    else:
+        form = UnitCreationForm()
+
+    return render(request, 'core/admin/create_unit.html', {'form': form})
+
+@admin_required
+def create_unit_group(request):
+    form = UnitGroupCreationForm(request.POST or None)
+    if form.is_valid():
+        unit_group = form.save(commit=False)
+        unit_group.created_by = request.user
+        unit_group.save()
+
+        # Auto-create units
+        def create_units(prefix, count, unit_type):
+            for i in range(1, count + 1):
+                Unit.objects.create(
+                    client=unit_group.client,
+                    name=f"{prefix} {i}",
+                    unit_type=unit_type,
+                    group=unit_group
+                )
+
+        create_units("Apartment", unit_group.num_apartments, "apartment")
+        create_units("Duplex", unit_group.num_duplexes, "duplex")
+        create_units("House", unit_group.num_houses, "house")
+        create_units("Commercial Unit", unit_group.num_commercial_units, "commercial")
+
+        messages.success(request, "Units created successfully.")
+        return redirect('admin_dashboard')
+
+    return render(request, 'core/create_unit_group.html', {'form': form})

@@ -2,8 +2,15 @@ from django.urls import path
 from . import views
 from django.contrib.auth.views import LogoutView
 from core.views import CustomLoginView
+from django.shortcuts import redirect
 
 urlpatterns = [
+
+    # ====================
+    # Redirect
+    # ====================
+    path('', lambda request: redirect('login', permanent=False)),
+    
     # ====================
     # Authentication
     # ====================
@@ -14,6 +21,11 @@ urlpatterns = [
     # Post-login Routing
     # ====================
     path('redirect-after-login/', views.redirect_after_login, name='redirect_after_login'),
+
+    # ====================
+    # Redirect
+    # ====================
+    path('', lambda request: redirect('login', permanent=False)),
 
     # ====================
     # Dashboard Routes
@@ -29,6 +41,8 @@ urlpatterns = [
     path('dashboard/admin/create-user/', views.create_user, name='create_user'),
     path('dashboard/admin/create-company/', views.create_company, name='create_company'),
     path('dashboard/admin/create-client/', views.create_client, name='create_client'),
+    path('dashboard/admin/units/create/', views.create_unit, name='create_unit'),
+
 
     # ====================
     # Manage Pages (Lists)
@@ -63,6 +77,7 @@ urlpatterns = [
     # ===============================
     path('dashboard/work-orders/create/', views.create_work_order, name='create_work_order'),
     path('pm/work-orders/', views.my_work_orders, name='my_work_orders'),
+    path('ajax/load-units/', views.load_units_for_client, name='ajax_load_units'),
 
     # Contractor response to work orders
     path('work-orders/<int:work_order_id>/accept/', views.accept_work_order, name='accept_work_order'),

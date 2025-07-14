@@ -1,5 +1,5 @@
 from django import forms
-from .models import CustomUser, Company, Client, WorkOrder, BusinessType, Unit
+from .models import CustomUser, Company, Client, WorkOrder, BusinessType, Unit, UnitGroup
 from django.contrib.auth.forms import UserCreationForm
 
 from django.forms import CheckboxInput, Textarea, ModelChoiceField, DateInput
@@ -89,8 +89,16 @@ class WorkOrderForm(forms.ModelForm):
             'due_date': DateInput(attrs={'type': 'date'}),
         }
 
+    class WorkOrderForm(forms.ModelForm):
+        class Meta:
+            model = WorkOrder
+            fields = '__all__'  # Or explicitly list fields if preferred
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Default to no units shown until a client is selected
+        self.fields['unit'].queryset = Unit.objects.none()
 
         # Apply Bootstrap 5 styling
         for field_name, field in self.fields.items():
@@ -99,15 +107,33 @@ class WorkOrderForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control'})
 
-        # Limit clients to those registered
+        # Show all clients
         self.fields['client'].queryset = Client.objects.all()
 
-        # Limit business types
+        # Show all business types
         self.fields['business_type'].queryset = BusinessType.objects.all()
 
         # Preferred and second contractors will be filtered in the view
         self.fields['preferred_contractor'].queryset = Company.objects.none()
         self.fields['second_contractor'].queryset = Company.objects.none()
 
-        # Optional unit field
-        self.fields['unit'].queryset = Unit.objects.all()
+        # Dynamically filter unit dropdown based on selected client
+        if 'client' in self.data:
+            try:
+                client_id = int(self.data.get('client'))
+                self.fields['unit'].queryset = Unit.objects.filter(client_id=client_id)
+            except (ValueError, TypeError):
+                self.fields['unit'].queryset = Unit.objects.none()
+        elif self.instance.pk and self.instance.client:
+            self.fields['unit'].queryset = Unit.objects.filter(client=self.instance.client)
+
+
+class UnitCreationForm(forms.ModelForm):
+    class Meta:
+        model = Unit
+        fields = ['name', 'client']
+
+class UnitGroupCreationForm(forms.ModelForm):
+    class Meta:
+        model = UnitGroup
+        fields = ['client', 'num_apartments', 'num_duplexes', 'num_houses', 'num_commercial_units']

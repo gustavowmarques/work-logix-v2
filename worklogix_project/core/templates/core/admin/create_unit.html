@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% block title %}Create Unit{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2 class="mb-4">Create Unit</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Create Unit</button>
+  </form>
+</div>
+{% endblock %}

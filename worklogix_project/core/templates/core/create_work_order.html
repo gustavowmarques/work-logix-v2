@@ -3,6 +3,19 @@
 <div class="container mt-4">
   <h2>Create Work Order</h2>
   <form method="post" enctype="multipart/form-data">
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>There were errors in your form:</strong>
+        <ul>
+          {% for field in form %}
+            {% for error in field.errors %}
+              <li>{{ field.label }}: {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit" class="btn btn-primary">Submit</button>
