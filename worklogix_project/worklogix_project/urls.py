@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
 
+
+
 urlpatterns = [
     path('admin/', admin.site.urls), # Django's built-in admin panel
     path('', include('core.urls')), # Route root URLs to core

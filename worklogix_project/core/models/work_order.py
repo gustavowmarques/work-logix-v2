@@ -1,8 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-from core.models.client import Client
-from core.models.unit import Unit
+from .client import Client
+from .company import Company
 from core.models.business_type import BusinessType
 from core.models.company import Company
 
@@ -29,7 +29,7 @@ class WorkOrder(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
-    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True)
+    unit = models.ForeignKey("core.Unit", on_delete=models.CASCADE)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     business_type = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True)
 

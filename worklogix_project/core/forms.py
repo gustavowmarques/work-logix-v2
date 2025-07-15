@@ -1,33 +1,41 @@
 from django import forms
-from .models import CustomUser, Company, Client, WorkOrder, BusinessType, Unit, UnitGroup
+from django.forms import CheckboxInput, Textarea, DateInput
 from django.contrib.auth.forms import UserCreationForm
 
-from django.forms import CheckboxInput, Textarea, ModelChoiceField, DateInput
+from core.models import (
+    CustomUser,
+    Company,
+    Client,
+    WorkOrder,
+    BusinessType,
+    Unit,
+    UnitGroup,
+)
 
+
+# ===============================================================
+# Shared Styling Base
+# ===============================================================
 class StyledModelForm(forms.ModelForm):
     """
-    Base form to apply Bootstrap 5 styling. Only applies 'form-control' where appropriate.
+    Base form class that applies Bootstrap 5 styling to all fields.
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             widget = field.widget
 
-            # Skip checkboxes – apply checkbox-specific class
             if isinstance(widget, CheckboxInput):
-                widget.attrs.update({
-                    'class': 'form-check-input',
-                })
+                widget.attrs.update({'class': 'form-check-input'})
             elif isinstance(widget, Textarea):
-                widget.attrs.update({
-                    'class': 'form-control',
-                    'rows': 3,
-                })
+                widget.attrs.update({'class': 'form-control', 'rows': 3})
             else:
-                widget.attrs.update({
-                    'class': 'form-control',
-                })
+                widget.attrs.update({'class': 'form-control'})
 
+
+# ===============================================================
+# User Form
+# ===============================================================
 class CustomUserCreationForm(UserCreationForm):
     role = forms.ChoiceField(choices=CustomUser._meta.get_field('role').choices)
     company = forms.ModelChoiceField(queryset=Company.objects.all(), required=False)
@@ -49,13 +57,38 @@ class CustomUserCreationForm(UserCreationForm):
         return company
 
 
+# ===============================================================
+# Company Form
+# ===============================================================
 class CompanyCreationForm(StyledModelForm):
     class Meta:
         model = Company
-        fields = ['name', 'address', 'email', 'phone', 'website', 'is_contractor', 'is_property_manager', 'is_client']
+        fields = [
+            'name',
+            'address',
+            'email',
+            'phone',
+            'website',
+            'is_contractor',
+            'is_property_manager',
+            'is_client',
+        ]
 
 
+# ===============================================================
+# Client Form
+# ===============================================================
 class ClientCreationForm(StyledModelForm):
+    default_eircode = forms.CharField(
+        label="Shared Eircode (for unit address pre-fill)",
+        max_length=10,
+        required=False
+    )
+    num_apartments = forms.IntegerField(min_value=0, initial=0, label="Number of Apartments")
+    num_duplexes = forms.IntegerField(min_value=0, initial=0, label="Number of Duplexes")
+    num_houses = forms.IntegerField(min_value=0, initial=0, label="Number of Houses")
+    num_commercial_units = forms.IntegerField(min_value=0, initial=0, label="Number of Commercial Units")
+
     class Meta:
         model = Client
         fields = ['name', 'address', 'company', 'notes']
@@ -64,12 +97,15 @@ class ClientCreationForm(StyledModelForm):
         super().__init__(*args, **kwargs)
         self.fields['company'].queryset = Company.objects.filter(is_property_manager=True)
 
+
+# ===============================================================
+# Work Order Form
+# ===============================================================
 class WorkOrderForm(forms.ModelForm):
     """
-    Form for Admins or Property Managers to create Work Orders.
-    Includes logic to filter contractors by business type.
+    Used by Admins or Property Managers to create Work Orders.
+    Filters contractors based on business type.
     """
-
     class Meta:
         model = WorkOrder
         fields = [
@@ -89,35 +125,22 @@ class WorkOrderForm(forms.ModelForm):
             'due_date': DateInput(attrs={'type': 'date'}),
         }
 
-    class WorkOrderForm(forms.ModelForm):
-        class Meta:
-            model = WorkOrder
-            fields = '__all__'  # Or explicitly list fields if preferred
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Default to no units shown until a client is selected
-        self.fields['unit'].queryset = Unit.objects.none()
+        self.fields['unit'].queryset = Unit.objects.none()  # No units until client selected
+        self.fields['client'].queryset = Client.objects.all()
+        self.fields['business_type'].queryset = BusinessType.objects.all()
+        self.fields['preferred_contractor'].queryset = Company.objects.none()
+        self.fields['second_contractor'].queryset = Company.objects.none()
 
-        # Apply Bootstrap 5 styling
         for field_name, field in self.fields.items():
-            if isinstance(field.widget, forms.CheckboxInput):
+            if isinstance(field.widget, CheckboxInput):
                 field.widget.attrs.update({'class': 'form-check-input'})
             else:
                 field.widget.attrs.update({'class': 'form-control'})
 
-        # Show all clients
-        self.fields['client'].queryset = Client.objects.all()
-
-        # Show all business types
-        self.fields['business_type'].queryset = BusinessType.objects.all()
-
-        # Preferred and second contractors will be filtered in the view
-        self.fields['preferred_contractor'].queryset = Company.objects.none()
-        self.fields['second_contractor'].queryset = Company.objects.none()
-
-        # Dynamically filter unit dropdown based on selected client
+        # Pre-populate units if client selected (via POST or instance)
         if 'client' in self.data:
             try:
                 client_id = int(self.data.get('client'))
@@ -128,12 +151,35 @@ class WorkOrderForm(forms.ModelForm):
             self.fields['unit'].queryset = Unit.objects.filter(client=self.instance.client)
 
 
+# ===============================================================
+# Unit Forms
+# ===============================================================
 class UnitCreationForm(forms.ModelForm):
     class Meta:
         model = Unit
         fields = ['name', 'client']
 
+
 class UnitGroupCreationForm(forms.ModelForm):
     class Meta:
         model = UnitGroup
         fields = ['client', 'num_apartments', 'num_duplexes', 'num_houses', 'num_commercial_units']
+
+
+UNIT_TYPES = [
+    ('apartment', 'Apartment'),
+    ('duplex', 'Duplex'),
+    ('house', 'House'),
+    ('commercial', 'Commercial Unit'),
+]
+
+class UnitForm(forms.Form):
+    unit_number = forms.CharField(max_length=20)
+    unit_type = forms.ChoiceField(choices=UNIT_TYPES)
+    unit_contact_name = forms.CharField(max_length=100)
+    unit_contact_number = forms.CharField(max_length=20)
+    unit_contact_email = forms.EmailField()
+    eircode = forms.CharField(max_length=10)
+    street = forms.CharField(max_length=255, required=False)
+    city = forms.CharField(max_length=100, required=False)
+    county = forms.CharField(max_length=100, required=False)

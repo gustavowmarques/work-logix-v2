@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Review & Confirm Units</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Unit Number</th>
+          <th>Type</th>
+          <th>Eircode</th>
+          <th>Street</th>
+          <th>City</th>
+          <th>County</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+        <tr>
+          <td>{{ form.unit_number }}</td>
+          <td>{{ form.unit_type }}</td>
+          <td>
+            {{ form.eircode }}
+            <input type="hidden" class="eircode-input" data-index="{{ forloop.counter0 }}">
+          </td>
+          <td>{{ form.street }}</td>
+          <td>{{ form.city }}</td>
+          <td>{{ form.county }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Save All Units</button>
+  </form>
+</div>
+
+<script src="{% static 'js/unit_lookup.js' %}"></script>
+{% endblock %}
