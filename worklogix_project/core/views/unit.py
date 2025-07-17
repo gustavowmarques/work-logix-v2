@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from core.forms import UnitForm
+from django.forms import formset_factory
 from core.models import Unit, Client
+
+UnitFormSet = formset_factory(UnitForm, extra=0)
 
 # Placeholder function — later replace with real Eircode lookup
 def fake_address_lookup(eircode):
