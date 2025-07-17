@@ -3,6 +3,7 @@ from django.contrib import messages
 from core.forms import UnitForm
 from django.forms import formset_factory
 from core.models import Unit, Client
+from django.core.paginator import Paginator
 
 UnitFormSet = formset_factory(UnitForm, extra=0)
 
@@ -41,9 +42,15 @@ def review_units(request):
         generate('house', request.session.get('num_houses', 0), 'House')
         generate('commercial', request.session.get('num_commercial_units', 0), 'Commercial')
 
-        formset = UnitFormSet(initial=initial)
+        # Paginate the initial data list
+        paginator = Paginator(initial, 20)  # 20 per page
+        page_number = request.GET.get('page') or 1
+        page_obj = paginator.get_page(page_number)
+
+        formset = UnitFormSet(initial=page_obj.object_list)
 
     else:
+        # On POST, we assume all formset data is submitted at once (non-paginated)
         formset = UnitFormSet(request.POST)
         if formset.is_valid():
             client = Client.objects.get(id=client_id)
@@ -60,4 +67,4 @@ def review_units(request):
             messages.success(request, "Units created successfully.")
             return redirect('manage_clients')
 
-    return render(request, 'core/admin/review_units.html', {'formset': formset})
+    return render(request, 'core/admin/review_units.html', {'formset': formset, 'page_obj': page_obj,})
