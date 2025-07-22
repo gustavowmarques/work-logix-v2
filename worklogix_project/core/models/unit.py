@@ -27,7 +27,9 @@ class Unit(models.Model):
     street = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     county = models.CharField(max_length=100, blank=True, null=True)
-
+    unit_contact_name = models.CharField(max_length=100, blank=True, null=True)
+    unit_contact_email = models.EmailField(blank=True, null=True)
+    unit_contact_number = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
         return f"{self.client.name} - {self.name}"

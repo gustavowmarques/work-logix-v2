@@ -9,6 +9,8 @@ from core.models import Unit, Client
 import requests
 from django.conf import settings
 
+
+
 # Define a formset factory for handling multiple UnitForm instances
 UnitFormSet = formset_factory(UnitForm, extra=0)
 
@@ -98,7 +100,7 @@ def review_units(request):
                     unit_contact_number=form.cleaned_data['unit_contact_number'],
                 )
             messages.success(request, "Units created successfully.")
-            return redirect('admin_manage_clients')
+            return redirect('manage_clients')
 
         else:
             print("Formset errors:", formset.errors)
