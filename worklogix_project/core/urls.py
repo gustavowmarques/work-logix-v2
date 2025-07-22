@@ -14,6 +14,7 @@ from core.views.admin import (
 
 from core.views.client import create_client
 from core.views.unit import review_units
+from core.views import work_order
 from core.views.work_order import (
     create_work_order, my_work_orders,
     accept_work_order, reject_work_order,
@@ -94,6 +95,7 @@ urlpatterns = [
     path('dashboard/work-orders/create/', create_work_order, name='create_work_order'),
     path('pm/work-orders/', my_work_orders, name='my_work_orders'),
     path('ajax/load-units/', load_units_for_client, name='ajax_load_units'),
+    path('dashboard/work-orders/load-units/', work_order.load_units_for_client, name='load_units_for_client'),
 
     # Work order actions for contractors
     path('work-orders/<int:work_order_id>/accept/', accept_work_order, name='accept_work_order'),
