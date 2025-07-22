@@ -26,6 +26,9 @@ def create_client(request):
         request.session['num_duplexes'] = form.cleaned_data['num_duplexes']
         request.session['num_houses'] = form.cleaned_data['num_houses']
         request.session['num_commercial_units'] = form.cleaned_data['num_commercial_units']
+        request.session['unit_contact_name'] = form.cleaned_data.get('unit_contact_name')
+        request.session['unit_contact_email'] = form.cleaned_data.get('unit_contact_email')
+        request.session['unit_contact_number'] = form.cleaned_data.get('unit_contact_number')
 
         # 3. OPTIONAL: create UnitGroup for grouped tracking (can skip if not needed)
         UnitGroup.objects.create(

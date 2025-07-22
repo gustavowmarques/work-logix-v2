@@ -1,5 +1,4 @@
 {% extends 'core/base.html' %}
-
 {% block title %}Create New Client{% endblock %}
 
 {% block content %}
@@ -10,6 +9,7 @@
     </div>
     <div class="card-body">
 
+      {# Flash messages (e.g., success, error) #}
       {% if messages %}
         {% for message in messages %}
           <div class="alert alert-{{ message.tags }}">{{ message }}</div>
@@ -18,9 +18,11 @@
 
       <form method="post">
         {% csrf_token %}
+
+        {# Render all fields dynamically #}
         {% for field in form %}
           <div class="mb-3">
-            <label class="form-label">{{ field.label_tag }}</label>
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
             {{ field }}
             {% if field.help_text %}
               <div class="form-text">{{ field.help_text }}</div>
@@ -30,8 +32,11 @@
             {% endif %}
           </div>
         {% endfor %}
-        <button type="submit" class="btn btn-primary">Create Client</button>
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary">Create Client</button>
+          <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
       </form>
 
     </div>

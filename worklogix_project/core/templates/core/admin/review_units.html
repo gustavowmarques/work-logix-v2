@@ -4,6 +4,19 @@
 {% block content %}
 <div class="container mt-4">
   <h2>Review & Confirm Units</h2>
+
+  {# Global errors for the entire formset #}
+  {% if formset.non_form_errors %}
+    <div class="alert alert-danger">
+      <strong>There were errors with your submission:</strong>
+      <ul>
+        {% for error in formset.non_form_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
   <form method="post">
     {% csrf_token %}
     {{ formset.management_form }}
@@ -17,20 +30,62 @@
           <th>Street</th>
           <th>City</th>
           <th>County</th>
+          <th>Contact Name</th>
+          <th>Contact Number</th>
+          <th>Contact Email</th>
         </tr>
       </thead>
       <tbody>
         {% for form in formset %}
         <tr>
-          <td>{{ form.unit_number }}</td>
-          <td>{{ form.unit_type }}</td>
+          {# Per-form validation errors (non-field-specific) #}
+          {% if form.non_field_errors %}
+            <td colspan="9">
+              <div class="alert alert-danger mb-2">
+                {% for error in form.non_field_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            </td>
+          {% endif %}
+
+          <td>
+            {{ form.unit_number }}
+            {{ form.unit_number.errors }}
+          </td>
+          <td>
+            {{ form.unit_type }}
+            {{ form.unit_type.errors }}
+          </td>
           <td>
             {{ form.eircode }}
+            {{ form.eircode.errors }}
             <input type="hidden" class="eircode-input" data-index="{{ forloop.counter0 }}">
           </td>
-          <td>{{ form.street }}</td>
-          <td>{{ form.city }}</td>
-          <td>{{ form.county }}</td>
+          <td>
+            {{ form.street }}
+            {{ form.street.errors }}
+          </td>
+          <td>
+            {{ form.city }}
+            {{ form.city.errors }}
+          </td>
+          <td>
+            {{ form.county }}
+            {{ form.county.errors }}
+          </td>
+          <td>
+            {{ form.unit_contact_name }}
+            {{ form.unit_contact_name.errors }}
+          </td>
+          <td>
+            {{ form.unit_contact_number }}
+            {{ form.unit_contact_number.errors }}
+          </td>
+          <td>
+            {{ form.unit_contact_email }}
+            {{ form.unit_contact_email.errors }}
+          </td>
         </tr>
         {% endfor %}
       </tbody>

@@ -79,6 +79,7 @@ class CompanyCreationForm(StyledModelForm):
 # Client Form
 # ===============================================================
 class ClientCreationForm(StyledModelForm):
+    # These fields are for unit generation & address prefilling
     default_eircode = forms.CharField(
         label="Shared Eircode (for unit address pre-fill)",
         max_length=10,
@@ -89,13 +90,30 @@ class ClientCreationForm(StyledModelForm):
     num_houses = forms.IntegerField(min_value=0, initial=0, label="Number of Houses")
     num_commercial_units = forms.IntegerField(min_value=0, initial=0, label="Number of Commercial Units")
 
+    
+    unit_contact_name = forms.CharField(
+        label="Default Contact Name for Units",
+        max_length=100,
+        required=False
+    )
+    unit_contact_number = forms.CharField(
+        label="Default Contact Number for Units",
+        max_length=20,
+        required=False
+    )
+    unit_contact_email = forms.EmailField(
+        label="Default Contact Email for Units",
+        required=False
+    )
+
     class Meta:
         model = Client
-        fields = ['name', 'address', 'company', 'notes']
+        fields = ['name', 'address', 'company', 'notes']  # Do NOT include the extra form-only fields
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['company'].queryset = Company.objects.filter(is_property_manager=True)
+
 
 
 # ===============================================================
@@ -183,3 +201,4 @@ class UnitForm(forms.Form):
     street = forms.CharField(max_length=255, required=False)
     city = forms.CharField(max_length=100, required=False)
     county = forms.CharField(max_length=100, required=False)
+

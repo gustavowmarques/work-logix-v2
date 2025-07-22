@@ -135,6 +135,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [
+    BASE_DIR / "core" / "static",  # or os.path.join(BASE_DIR, 'core', 'static') if you're not using Pathlib
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -144,3 +148,6 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/redirect-after-login/'
 LOGOUT_REDIRECT_URL = '/login/'
 
+GOOGLE_MAPS_API_KEY = 'AIzaSyBG4mwS8_kl11iqMy8sb0_MnBSq-wkStyw'
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
