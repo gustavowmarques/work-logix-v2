@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.forms import formset_factory, modelform_factory
+from django.forms import formset_factory, modelformset_factory
 from django.conf import settings
 import requests
 
