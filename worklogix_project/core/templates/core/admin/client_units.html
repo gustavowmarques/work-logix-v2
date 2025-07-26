@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h4>Manage Units for {{ client.name }}</h4>
+
+  {% if formset.non_form_errors %}
+    <div class="alert alert-danger">
+        {{ formset.non_form_errors }}
+    </div>
+   {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    <table class="table table-bordered table-sm">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Eircode</th>
+          <th>Street</th>
+          <th>City</th>
+          <th>County</th>
+          <th>Contact</th>
+          <th>Delete?</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for form in formset %}
+          <tr>
+            <td>{{ form.name }}</td>
+            <td>{{ form.unit_type }}</td>
+            <td>{{ form.eircode }}</td>
+            <td>{{ form.street }}</td>
+            <td>{{ form.city }}</td>
+            <td>{{ form.county }}</td>
+            <td>
+              {{ form.unit_contact_name }}<br>
+              <small>{{ form.unit_contact_email }}</small><br>
+              <small>{{ form.unit_contact_number }}</small>
+            </td>
+            <td>{{ form.DELETE }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-success">Save Changes</button>
+    <a href="{% url 'manage_clients' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

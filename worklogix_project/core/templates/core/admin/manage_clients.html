@@ -42,7 +42,11 @@
                 <td>{{ client.address }}</td>
                 <td>{{ client.company.name }}</td>
                 <td>{{ client.notes|truncatechars:50 }}</td>
-                <td>{{ client.unit_set.count }} unit{% if client.unit_set.count != 1 %}s{% endif %}</td>
+                <td>{{ client.unit_set.count }}
+                  <a href="{% url 'client_units' client.id %}" class="ms-2 text-primary" title="Manage Units">
+                    <i class="fas fa-pen"></i>
+                  </a> unit{% if client.unit_set.count != 1 %}s{% endif %}
+                </td>
                 <td>
                   <a href="{% url 'view_client' client.id %}" class="btn btn-sm btn-outline-primary">View</a>
                   <a href="{% url 'edit_client' client.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>

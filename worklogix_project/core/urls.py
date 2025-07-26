@@ -1,6 +1,7 @@
 from django.urls import path
 from django.shortcuts import redirect
-from core.views.unit import unit_generator
+from core.views.unit import unit_generator, delete_unit, client_units, review_units
+from . import views
 
 
 # ============================
@@ -34,18 +35,6 @@ from core.views.client import (
     create_client, manage_clients,
     view_client, edit_client, delete_client
 )
-
-# ============================
-# Unit Views
-# ============================
-from core.views.unit import review_units
-
-# ============================
-# Units Generator
-# ============================
-
-path('dashboard/admin/units/generator/', unit_generator, name='unit_generator'),
-
 
 # ============================
 # Work Order Views
@@ -104,8 +93,9 @@ urlpatterns = [
     path('clients/units/review/', review_units, name='review_units'),
     path('dashboard/admin/units/generator/', unit_generator, name='unit_generator'),
     path('dashboard/admin/units/generator/<int:client_id>/', unit_generator, name='unit_generator_for_client'),
-
-
+    path('dashboard/admin/units/delete/<int:unit_id>/', delete_unit, name='delete_unit'),
+    path('dashboard/admin/clients/<int:client_id>/units/', client_units, name='client_units'),
+   
     # ====================
     # Company Management
     # ====================

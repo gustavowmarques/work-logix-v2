@@ -4,6 +4,13 @@
 {% block content %}
 <div class="container mt-4">
   <h2>Review & Confirm Units</h2>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} mt-3">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
 
   {# Global errors for the entire formset #}
   {% if formset.non_form_errors %}
@@ -23,7 +30,7 @@
 
     <table class="table table-bordered">
       <thead>
-        <tr>
+        <tr class="{% if form.errors %}table-danger{% endif %}">
           <th>Unit Number</th>
           <th>Type</th>
           <th>Eircode</th>
@@ -37,7 +44,7 @@
       </thead>
       <tbody>
         {% for form in formset %}
-        <tr>
+        <tr class="{% if form.errors %}table-danger{% endif %}">
           {# Per-form validation errors (non-field-specific) #}
           {% if form.non_field_errors %}
             <td colspan="9">
@@ -128,6 +135,9 @@
 
       <div>
         <button type="submit" class="btn btn-primary">Save All Units</button>
+      </div>
+      <div>
+        <p class="text-muted">You are reviewing {{ formset.total_form_count }} unit{{ formset.total_form_count|pluralize }}.</p>
       </div>
     </div>
   </form>

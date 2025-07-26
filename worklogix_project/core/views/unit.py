@@ -1,11 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.forms import formset_factory
+from django.forms import formset_factory, modelform_factory
 from django.conf import settings
 import requests
 
 from core.forms import UnitForm, UnitGeneratorForm
 from core.models import Unit, Client
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+
+
 
 # Create a formset for multiple units
 UnitFormSet = formset_factory(UnitForm, extra=0)
@@ -59,7 +64,7 @@ def review_units(request):
     else:
         formset = UnitFormSet(request.POST)
         if formset.is_valid():
-            client = Client.objects.get(id=client_id)
+            client = get_object_or_404(Client, id=client_id)
             for form in formset:
                 Unit.objects.create(
                     client=client,
@@ -102,11 +107,15 @@ def unit_generator(request):
             start = form.cleaned_data['start']
             end = form.cleaned_data['end']
 
+            existing_names = set(Unit.objects.filter(client=client).values_list('name', flat=True))
             created = 0
             for i in range(start, end + 1):
                 name = f"{prefix} {i}"
-                Unit.objects.create(client=client, name=name)
-                created += 1
+                if name not in existing_names:
+                    Unit.objects.create(client=client, name=name)
+                    created += 1
+                else:
+                    messages.warning(request, f"Skipped duplicate unit: {name}")
 
             messages.success(request, f"{created} units created for {client.name}.")
             return redirect('manage_clients')
@@ -114,6 +123,55 @@ def unit_generator(request):
         form = UnitGeneratorForm(initial=initial)
 
     return render(request, 'core/admin/unit_generator.html', {'form': form})
+
+@login_required
+def delete_unit(request, unit_id):
+    """
+    Deletes a single unit by ID and redirects back to the review_units page.
+    """
+    unit = get_object_or_404(Unit, id=unit_id)
+    client_name = unit.client.name
+
+    if request.method == 'POST':
+        unit.delete()
+        messages.success(request, f"Unit '{unit.name}' deleted from {client_name}.")
+    
+    return redirect('review_units')
+
+@login_required
+def client_units(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+    units = client.unit_set.all()
+
+    UnitInlineFormSet = modelformset_factory(Unit, fields=['name', 'unit_type', 'eircode', 'street', 'city', 'county', 'unit_contact_name', 'unit_contact_email', 'unit_contact_number'], extra=1, can_delete=True)
+
+    if request.method == 'POST':
+        formset = UnitInlineFormSet(request.POST, queryset=units)
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+
+            existing_names = set(Unit.objects.filter(client=client).values_list('name', flat=True))
+
+            for unit in instances:
+                if unit.name in existing_names and unit.id is None:
+                    messages.warning(request, f"Duplicate unit: {unit.name}")
+                    continue
+                unit.client = client
+                unit.save()
+
+            for obj in formset.deleted_objects:
+                obj.delete()
+
+            messages.success(request, "Units updated successfully.")
+            return redirect('manage_clients')
+
+    else:
+        formset = UnitInlineFormSet(queryset=units)
+
+    return render(request, 'core/admin/client_units.html', {
+        'client': client,
+        'formset': formset
+    })
 
 
 def google_address_lookup(eircode):

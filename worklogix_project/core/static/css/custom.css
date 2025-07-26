@@ -1,0 +1,7 @@
+.unit-cell .fa-pen {
+    visibility: hidden;
+  }
+  .unit-cell:hover .fa-pen {
+    visibility: visible;
+  }
+  
