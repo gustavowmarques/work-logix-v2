@@ -1,6 +1,6 @@
 from django.urls import path 
 from django.shortcuts import redirect
-
+from core.views.api import get_contractors_by_business_type
 
 # Views: Split by file for clarity
 from core.views.auth import CustomLoginView, custom_logout, redirect_after_login
@@ -100,4 +100,5 @@ urlpatterns = [
     # Work order actions for contractors
     path('work-orders/<int:work_order_id>/accept/', accept_work_order, name='accept_work_order'),
     path('work-orders/<int:work_order_id>/reject/', reject_work_order, name='reject_work_order'),
+    path('api/contractors/<int:business_type_id>/', get_contractors_by_business_type, name='get_contractors_by_business_type'),
 ]
