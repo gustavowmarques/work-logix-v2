@@ -61,6 +61,10 @@ class CustomUserCreationForm(UserCreationForm):
 # Company Form
 # ===============================================================
 class CompanyCreationForm(StyledModelForm):
+    """
+    Form for creating new companies (contractor, PM, or client).
+    Includes Business Type dropdown and conditional validation.
+    """
     class Meta:
         model = Company
         fields = [
@@ -71,9 +75,23 @@ class CompanyCreationForm(StyledModelForm):
             'website',
             'is_contractor',
             'is_property_manager',
-            'is_client',
+            'business_type',
         ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['business_type'].queryset = BusinessType.objects.all().order_by('name')
+        self.fields['business_type'].required = False  # Required only if is_contractor
+
+    def clean(self):
+        cleaned_data = super().clean()
+        is_contractor = cleaned_data.get('is_contractor')
+        business_type = cleaned_data.get('business_type')
+
+        if is_contractor and not business_type:
+            self.add_error('business_type', 'Business type is required for contractor companies.')
+
+        return cleaned_data
 
 # ===============================================================
 # Client Form

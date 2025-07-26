@@ -9,16 +9,18 @@
     </div>
     <div class="card-body">
 
-      <!-- Flash messages -->
+      <!-- Flash Messages -->
       {% if messages %}
         {% for message in messages %}
           <div class="alert alert-{{ message.tags }}">{{ message }}</div>
         {% endfor %}
       {% endif %}
 
-      <!-- Form start -->
+      <!-- Company Creation Form -->
       <form method="post">
         {% csrf_token %}
+
+        <!-- Render Fields Dynamically with Styling -->
         {% for field in form %}
           {% if field.field.widget.input_type == "checkbox" %}
             <div class="form-check mb-2">
@@ -34,7 +36,7 @@
               {% endif %}
             </div>
           {% else %}
-            <div class="mb-3">
+            <div class="mb-3 field-{{ field.name }}">
               <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
               {{ field }}
               {% if field.help_text %}
@@ -46,11 +48,18 @@
             </div>
           {% endif %}
         {% endfor %}
-        
+
+        <!-- Action Buttons -->
         <button type="submit" class="btn btn-success">Create Company</button>
         <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
       </form>
+
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+  {% load static %}
+  <script src="{% static 'js/create_company.js' %}"></script>
 {% endblock %}
