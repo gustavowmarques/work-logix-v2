@@ -19,7 +19,7 @@ class Unit(models.Model):
         ('commercial', 'Commercial Unit'),
     ]
 
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='units')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='unit_set')
     name = models.CharField(max_length=100)
     unit_type = models.CharField(max_length=20, choices=UNIT_TYPES, default='apartment')
     group = models.ForeignKey(UnitGroup, on_delete=models.CASCADE, null=True, blank=True)

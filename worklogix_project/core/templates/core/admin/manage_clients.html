@@ -31,6 +31,7 @@
               <th>Address</th>
               <th>Managed By (PM)</th>
               <th>Notes</th>
+              <th>Units</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -41,10 +42,12 @@
                 <td>{{ client.address }}</td>
                 <td>{{ client.company.name }}</td>
                 <td>{{ client.notes|truncatechars:50 }}</td>
+                <td>{{ client.unit_set.count }} unit{% if client.unit_set.count != 1 %}s{% endif %}</td>
                 <td>
-                    <a href="{% url 'view_client' client.id %}" class="btn btn-sm btn-outline-primary">View</a>
-                    <a href="{% url 'edit_client' client.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                    <a href="{% url 'delete_client' client.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                  <a href="{% url 'view_client' client.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                  <a href="{% url 'edit_client' client.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                  <a href="{% url 'delete_client' client.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                  <a href="{% url 'unit_generator' %}?client_id={{ client.id }}" class="btn btn-outline-info btn-sm">Bulk Generate Units</a>
                 </td>
               </tr>
             {% empty %}

@@ -1,42 +1,37 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.forms import formset_factory
-from core.forms import UnitForm
-from core.models import Unit, Client
 from django.conf import settings
 import requests
 
-# Create a formset for multiple UnitForm entries
+from core.forms import UnitForm, UnitGeneratorForm
+from core.models import Unit, Client
+
+# Create a formset for multiple units
 UnitFormSet = formset_factory(UnitForm, extra=0)
+
 
 def review_units(request):
     """
-    Handles the unit review and confirmation step.
-    GET: Prepares initial unit data based on session variables.
-    POST: Saves all submitted units to the database.
+    Review and confirm bulk unit creation via formset.
+    Uses session data to prepopulate unit entries.
     """
-    # Session validation
     client_id = request.session.get('client_id')
     eircode = request.session.get('default_eircode', '')
+
     if not client_id:
         messages.error(request, "Session expired. Please re-create the client.")
         return redirect('create_client')
 
-    # Address resolution
+    # Lookup address data from Google API (optional)
     address_data = google_address_lookup(eircode) if eircode else {'street': '', 'city': '', 'county': ''}
 
-    # Contact info from session
+    # Default contact info from session
     contact_name = request.session.get('unit_contact_name', '')
     contact_email = request.session.get('unit_contact_email', '')
     contact_number = request.session.get('unit_contact_number', '')
 
-    print("Contact defaults from session:")
-    print("Name:", contact_name)
-    print("Number:", contact_number)
-    print("Email:", contact_email)
-
     if request.method == 'GET':
-        # Build initial formset data
         initial = []
 
         def generate(unit_type, count, prefix):
@@ -58,20 +53,11 @@ def review_units(request):
         generate('house', request.session.get('num_houses', 0), 'House')
         generate('commercial', request.session.get('num_commercial_units', 0), 'Commercial')
 
-        if initial:
-            print("Sample unit:", initial[0])
-
-        # Render all units at once (pagination removed)
         formset = UnitFormSet(initial=initial)
+        return render(request, 'core/admin/review_units.html', {'formset': formset})
 
-        return render(request, 'core/admin/review_units.html', {
-            'formset': formset,
-            'page_obj': None  # no pagination used
-        })
-
-    else:  # POST
+    else:
         formset = UnitFormSet(request.POST)
-
         if formset.is_valid():
             client = Client.objects.get(id=client_id)
             for form in formset:
@@ -89,36 +75,61 @@ def review_units(request):
                 )
             messages.success(request, "Units created successfully.")
             return redirect('manage_clients')
-        else:
-            print("Formset errors:", formset.errors)
 
-        return render(request, 'core/admin/review_units.html', {
-            'formset': formset,
-            'page_obj': None  # keep template logic clean
-        })
+        return render(request, 'core/admin/review_units.html', {'formset': formset})
+
+
+def unit_generator(request):
+    """
+    Bulk unit generator: create sequentially numbered units for a selected client.
+    Accepts ?client_id= to prefill form.
+    """
+    client_id = request.GET.get('client_id')
+    initial = {}
+
+    if client_id:
+        try:
+            client = Client.objects.get(id=client_id)
+            initial['client'] = client
+        except Client.DoesNotExist:
+            messages.warning(request, "Client not found. Please select a valid client.")
+
+    if request.method == 'POST':
+        form = UnitGeneratorForm(request.POST)
+        if form.is_valid():
+            client = form.cleaned_data['client']
+            prefix = form.cleaned_data['prefix']
+            start = form.cleaned_data['start']
+            end = form.cleaned_data['end']
+
+            created = 0
+            for i in range(start, end + 1):
+                name = f"{prefix} {i}"
+                Unit.objects.create(client=client, name=name)
+                created += 1
+
+            messages.success(request, f"{created} units created for {client.name}.")
+            return redirect('manage_clients')
+    else:
+        form = UnitGeneratorForm(initial=initial)
+
+    return render(request, 'core/admin/unit_generator.html', {'form': form})
+
 
 def google_address_lookup(eircode):
     """
-    Uses Google Maps Geocoding API to fetch address details from Eircode.
+    Uses Google Maps API to return address components from Eircode.
     """
     base_url = "https://maps.googleapis.com/maps/api/geocode/json"
-    params = {
-        "address": eircode,
-        "key": settings.GOOGLE_MAPS_API_KEY
-    }
+    params = {"address": eircode, "key": settings.GOOGLE_MAPS_API_KEY}
 
     try:
         response = requests.get(base_url, params=params)
         data = response.json()
-
         if data.get("status") == "OK":
             result = data["results"][0]
             components = result.get("address_components", [])
             formatted = result.get("formatted_address", "")
-
-            print("Address components:", components)
-            print("Formatted:", formatted)
-
             street = city = county = ""
 
             for comp in components:
@@ -131,7 +142,7 @@ def google_address_lookup(eircode):
 
             if not street and formatted:
                 parts = formatted.split(",")
-                if len(parts) > 1:
+                if parts:
                     street = parts[0].strip()
 
             return {

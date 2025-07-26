@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from core.models import Company
+from core.models import Company, Unit
 
 def get_contractors_by_business_type(request, business_type_id):
     """
@@ -16,3 +16,8 @@ def get_contractors_by_business_type(request, business_type_id):
     ]
 
     return JsonResponse({'contractors': data})
+
+def get_units_by_client(request, client_id):
+    units = Unit.objects.filter(client_id=client_id).order_by('name')
+    data = [{'id': u.id, 'name': u.name} for u in units]
+    return JsonResponse({'units': data})

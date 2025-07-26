@@ -1,6 +1,7 @@
 from django import forms
 from django.forms import CheckboxInput, Textarea, DateInput
 from django.contrib.auth.forms import UserCreationForm
+from core.models import Client
 
 from core.models import (
     CustomUser,
@@ -126,12 +127,25 @@ class ClientCreationForm(StyledModelForm):
 
     class Meta:
         model = Client
-        fields = ['name', 'address', 'company', 'notes']  # Do NOT include the extra form-only fields
+        fields = ['name', 'address', 'company', 'notes'] 
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['company'].queryset = Company.objects.filter(is_property_manager=True)
 
+class UnitGeneratorForm(forms.Form):
+    client = forms.ModelChoiceField(queryset=Client.objects.all(), label="Client")
+    prefix = forms.CharField(max_length=50, label="Prefix", initial="Unit")
+    start = forms.IntegerField(min_value=1, label="Start Number")
+    end = forms.IntegerField(min_value=1, label="End Number")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get('start')
+        end = cleaned_data.get('end')
+
+        if start and end and end < start:
+            raise forms.ValidationError("End number must be greater than or equal to start number.")
 
 
 # ===============================================================
@@ -162,13 +176,14 @@ class WorkOrderForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        client_id = kwargs.pop('client_id', None)
         super().__init__(*args, **kwargs)
-
-        self.fields['unit'].queryset = Unit.objects.none()  # No units until client selected
-        self.fields['client'].queryset = Client.objects.all()
-        self.fields['business_type'].queryset = BusinessType.objects.all()
-        self.fields['preferred_contractor'].queryset = Company.objects.none()
-        self.fields['second_contractor'].queryset = Company.objects.none()
+        if client_id:
+            self.fields['unit'].queryset = Unit.objects.none()  # No units until client selected
+            self.fields['client'].queryset = Client.objects.all()
+            self.fields['business_type'].queryset = BusinessType.objects.all()
+            self.fields['preferred_contractor'].queryset = Company.objects.none()
+            self.fields['second_contractor'].queryset = Company.objects.none()
 
         for field_name, field in self.fields.items():
             if isinstance(field.widget, CheckboxInput):
@@ -220,3 +235,28 @@ class UnitForm(forms.Form):
     city = forms.CharField(max_length=100, required=False)
     county = forms.CharField(max_length=100, required=False)
 
+class UnitBulkCreateForm(forms.Form):
+    client = forms.ModelChoiceField(
+        queryset=Client.objects.all(),
+        label="Client",
+        help_text="Select the client to assign units to.",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    prefix = forms.CharField(
+        max_length=50,
+        initial="Apt",
+        label="Unit Prefix",
+        help_text="Prefix for each unit name (e.g., Apt, Unit, Flat).",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    start_number = forms.IntegerField(
+        min_value=1,
+        initial=1,
+        label="Start Number",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    quantity = forms.IntegerField(
+        min_value=1,
+        label="Number of Units to Create",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )

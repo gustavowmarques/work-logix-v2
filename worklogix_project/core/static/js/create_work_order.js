@@ -32,5 +32,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const clientSelect = document.getElementById('id_client');
+        const unitSelect = document.getElementById('id_unit');
+      
+        function updateUnits(clientId) {
+          fetch(`/api/units/${clientId}/`)
+            .then(response => response.json())
+            .then(data => {
+              unitSelect.innerHTML = '<option value="">---------</option>';
+              data.units.forEach(unit => {
+                const option = new Option(unit.name, unit.id);
+                unitSelect.add(option);
+              });
+            });
+        }
+      
+        if (clientSelect) {
+          clientSelect.addEventListener('change', function () {
+            const clientId = this.value;
+            if (clientId) {
+              updateUnits(clientId);
+            } else {
+              unitSelect.innerHTML = '<option value="">---------</option>';
+            }
+          });
+        }
+      });
+      
   });
   
