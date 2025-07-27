@@ -1,7 +1,8 @@
 from django.urls import path
 from django.shortcuts import redirect
 from core.views.unit import unit_generator, delete_unit, client_units, review_units
-from . import views
+
+
 
 
 # ============================
@@ -95,7 +96,8 @@ urlpatterns = [
     path('dashboard/admin/units/generator/<int:client_id>/', unit_generator, name='unit_generator_for_client'),
     path('dashboard/admin/units/delete/<int:unit_id>/', delete_unit, name='delete_unit'),
     path('dashboard/admin/clients/<int:client_id>/units/', client_units, name='client_units'),
-   
+    path('ajax/get-units/<int:client_id>/', get_units_by_client, name='get_units_by_client'),
+
     # ====================
     # Company Management
     # ====================
@@ -134,7 +136,6 @@ urlpatterns = [
     # AJAX/API Endpoints
     # ====================
     path('api/contractors/<int:business_type_id>/', get_contractors_by_business_type, name='get_contractors_by_business_type'),
-    path('api/units/<int:client_id>/', get_units_by_client, name='get_units_by_client'),
 
     # (Optional: Legacy AJAX call from jQuery forms if needed)
     path('ajax/load-units/', load_units_for_client, name='ajax_load_units'),

@@ -178,12 +178,12 @@ class WorkOrderForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         client_id = kwargs.pop('client_id', None)
         super().__init__(*args, **kwargs)
-        if client_id:
-            self.fields['unit'].queryset = Unit.objects.none()  # No units until client selected
-            self.fields['client'].queryset = Client.objects.all()
-            self.fields['business_type'].queryset = BusinessType.objects.all()
-            self.fields['preferred_contractor'].queryset = Company.objects.none()
-            self.fields['second_contractor'].queryset = Company.objects.none()
+
+        
+        self.fields['client'].queryset = Client.objects.all()
+        self.fields['business_type'].queryset = BusinessType.objects.all()
+        self.fields['preferred_contractor'].queryset = Company.objects.none()
+        self.fields['second_contractor'].queryset = Company.objects.none()
 
         for field_name, field in self.fields.items():
             if isinstance(field.widget, CheckboxInput):
@@ -191,7 +191,7 @@ class WorkOrderForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control'})
 
-        # Pre-populate units if client selected (via POST or instance)
+        # Pre-populate unit dropdown based on client
         if 'client' in self.data:
             try:
                 client_id = int(self.data.get('client'))
@@ -200,6 +200,7 @@ class WorkOrderForm(forms.ModelForm):
                 self.fields['unit'].queryset = Unit.objects.none()
         elif self.instance.pk and self.instance.client:
             self.fields['unit'].queryset = Unit.objects.filter(client=self.instance.client)
+
 
 
 # ===============================================================
