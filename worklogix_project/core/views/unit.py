@@ -1,26 +1,35 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.forms import formset_factory, modelformset_factory
+from django.forms import modelformset_factory, modelformset_factory
 from django.conf import settings
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 import requests
 
 from core.forms import UnitForm, UnitGeneratorForm
 from core.models import Unit, Client
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
 
 
+# --------------------------
+# Formsets
+# --------------------------
+UnitFormSet = modelformset_factory(
+    Unit,
+    form=UnitForm,
+    fields=[
+        'name', 'unit_type', 'eircode', 'street', 'city', 'county',
+        'unit_contact_name', 'unit_contact_email', 'unit_contact_number'
+    ],
+    extra=0,
+    can_delete=True
+)
 
-
-# Create a formset for multiple units
-UnitFormSet = formset_factory(UnitForm, extra=0)
-
+# --------------------------
+# Views
+# --------------------------
 
 def review_units(request):
-    """
-    Review and confirm bulk unit creation via formset.
-    Uses session data to prepopulate unit entries.
-    """
+    """Review and confirm bulk unit creation via formset. Uses session data to prepopulate."""
     client_id = request.session.get('client_id')
     eircode = request.session.get('default_eircode', '')
 
@@ -28,10 +37,7 @@ def review_units(request):
         messages.error(request, "Session expired. Please re-create the client.")
         return redirect('create_client')
 
-    # Lookup address data from Google API (optional)
     address_data = google_address_lookup(eircode) if eircode else {'street': '', 'city': '', 'county': ''}
-
-    # Default contact info from session
     contact_name = request.session.get('unit_contact_name', '')
     contact_email = request.session.get('unit_contact_email', '')
     contact_number = request.session.get('unit_contact_number', '')
@@ -85,10 +91,7 @@ def review_units(request):
 
 
 def unit_generator(request):
-    """
-    Bulk unit generator: create sequentially numbered units for a selected client.
-    Accepts ?client_id= to prefill form.
-    """
+    """Bulk unit generator to create numbered units (e.g., APT 1–100) for a selected client."""
     client_id = request.GET.get('client_id')
     initial = {}
 
@@ -109,6 +112,7 @@ def unit_generator(request):
 
             existing_names = set(Unit.objects.filter(client=client).values_list('name', flat=True))
             created = 0
+
             for i in range(start, end + 1):
                 name = f"{prefix} {i}"
                 if name not in existing_names:
@@ -124,11 +128,10 @@ def unit_generator(request):
 
     return render(request, 'core/admin/unit_generator.html', {'form': form})
 
+
 @login_required
 def delete_unit(request, unit_id):
-    """
-    Deletes a single unit by ID and redirects back to the review_units page.
-    """
+    """Delete a single unit (used for manual unit deletion)."""
     unit = get_object_or_404(Unit, id=unit_id)
     client_name = unit.client.name
 
@@ -138,32 +141,56 @@ def delete_unit(request, unit_id):
     
     return redirect('review_units')
 
+
 @login_required
 def client_units(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     units = client.unit_set.all()
 
-    UnitInlineFormSet = modelformset_factory(Unit, fields=['name', 'unit_type', 'eircode', 'street', 'city', 'county', 'unit_contact_name', 'unit_contact_email', 'unit_contact_number'], extra=1, can_delete=True)
+    UnitInlineFormSet = modelformset_factory(
+        Unit,
+        fields=[
+            'name', 'unit_type', 'eircode', 'street', 'city', 'county',
+            'unit_contact_name', 'unit_contact_email', 'unit_contact_number'
+        ],
+        extra=1,
+        can_delete=True
+    )
 
     if request.method == 'POST':
-        formset = UnitInlineFormSet(request.POST, queryset=units)
+        formset = UnitInlineFormSet(request.POST, queryset=Unit.objects.filter(client=client))
+
         if formset.is_valid():
-            instances = formset.save(commit=False)
+            action = request.POST.get('action')
 
-            existing_names = set(Unit.objects.filter(client=client).values_list('name', flat=True))
+            if action == 'delete':
+                formset.save()  # Required to process deletions
 
-            for unit in instances:
-                if unit.name in existing_names and unit.id is None:
-                    messages.warning(request, f"Duplicate unit: {unit.name}")
-                    continue
-                unit.client = client
-                unit.save()
+                deleted_count = 0
+                for obj in formset.deleted_objects:
+                    if obj.id:
+                        print(f"Deleting unit: {obj.name}")
+                        obj.delete()
+                        deleted_count += 1
 
-            for obj in formset.deleted_objects:
-                obj.delete()
+                messages.success(request, f"{deleted_count} unit(s) deleted successfully.")
+                return redirect('client_units', client_id=client.id)
 
-            messages.success(request, "Units updated successfully.")
-            return redirect('manage_clients')
+
+
+            elif action == 'save':
+                instances = formset.save(commit=False)
+                for unit in instances:
+                    unit.client = client
+                    unit.save()
+                formset.save_m2m()
+                messages.success(request, "Units updated successfully.")
+                return redirect('client_units', client_id=client.id)
+
+        else:
+            messages.error(request, "There was a problem processing the form.")
+
+
 
     else:
         formset = UnitInlineFormSet(queryset=units)
@@ -174,9 +201,14 @@ def client_units(request, client_id):
     })
 
 
+
+# --------------------------
+# External: Google Eircode Lookup
+# --------------------------
+
 def google_address_lookup(eircode):
     """
-    Uses Google Maps API to return address components from Eircode.
+    Uses Google Maps Geocoding API to fetch address components based on Eircode.
     """
     base_url = "https://maps.googleapis.com/maps/api/geocode/json"
     params = {"address": eircode, "key": settings.GOOGLE_MAPS_API_KEY}
@@ -184,6 +216,7 @@ def google_address_lookup(eircode):
     try:
         response = requests.get(base_url, params=params)
         data = response.json()
+
         if data.get("status") == "OK":
             result = data["results"][0]
             components = result.get("address_components", [])

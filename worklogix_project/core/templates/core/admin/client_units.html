@@ -3,92 +3,76 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h4 class="mb-4">Manage Units for {{ client.name }}</h4>
+  <h4>Manage Units for {{ client.name }}</h4>
 
-  {# Show formset-level (non-field-specific) errors if any #}
+  <!-- Filter + Select All -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <input type="text" id="searchInput" class="form-control w-50 me-3" placeholder="Search units...">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="selectAll">
+      <label class="form-check-label" for="selectAll">Select All (for deletion)</label>
+    </div>
+  </div>
+
+  <!-- Show form errors -->
   {% if formset.non_form_errors %}
     <div class="alert alert-danger">
-      <strong>There were some issues:</strong>
-      <ul class="mb-0">
-        {% for error in formset.non_form_errors %}
-          <li>{{ error }}</li>
-        {% endfor %}
-      </ul>
+      {{ formset.non_form_errors }}
     </div>
   {% endif %}
 
-  <form method="post">
+  <form method="post" novalidate>
     {% csrf_token %}
     {{ formset.management_form }}
 
-    <table class="table table-bordered table-sm">
-      <thead class="table-light">
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Eircode</th>
-          <th>Street</th>
-          <th>City</th>
-          <th>County</th>
-          <th>Contact Details</th>
-          <th>Delete?</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for form in formset %}
-          <tr class="unit-row">
-            <td>
-              {{ form.name }}
-              {{ form.name.errors }}
-            </td>
-            <td>
-              {{ form.unit_type }}
-              {{ form.unit_type.errors }}
-            </td>
-            <td>
-              {{ form.eircode }}
-              {{ form.eircode.errors }}
-            </td>
-            <td>
-              {{ form.street }}
-              {{ form.street.errors }}
-            </td>
-            <td>
-              {{ form.city }}
-              {{ form.city.errors }}
-            </td>
-            <td>
-              {{ form.county }}
-              {{ form.county.errors }}
-            </td>
-            <td>
-              {{ form.unit_contact_name }}
-              <br>
-              <small>{{ form.unit_contact_email }}</small>
-              <br>
-              <small>{{ form.unit_contact_number }}</small>
-            </td>
-            <td class="text-center">
-              {{ form.DELETE }}
-            </td>
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle table-sm">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Eircode</th>
+            <th>Street</th>
+            <th>City</th>
+            <th>County</th>
+            <th>Contact Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Delete?</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for form in formset %}
+          <tr class="unit-row">
+            {{ form.id }}
+            <td>{{ form.name }}</td>
+            <td>{{ form.unit_type }}</td>
+            <td>{{ form.eircode }}</td>
+            <td>{{ form.street }}</td>
+            <td>{{ form.city }}</td>
+            <td>{{ form.county }}</td>
+            <td>{{ form.unit_contact_name }}</td>
+            <td>{{ form.unit_contact_email }}</td>
+            <td>{{ form.unit_contact_number }}</td>
+            <td class="text-center">{{ form.DELETE }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-    <div class="d-flex justify-content-between mt-4">
-      <a href="{% url 'manage_clients' %}" class="btn btn-secondary">← Back to Clients</a>
-      <button type="submit" class="btn btn-success">Save Changes</button>
+    <!-- Buttons -->
+    <div class="d-flex justify-content-between mt-3">
+      <a href="{% url 'manage_clients' %}" class="btn btn-secondary">Cancel</a>
+      <div class="d-flex justify-content-between">
+        <button type="submit" name="action" value="save" class="btn btn-success">Save Changes</button>
+        <button type="submit" name="action" value="delete" class="btn btn-danger">Delete Selected Units</button>
+      </div>
     </div>
   </form>
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-  /* Optional: Add hover styling to rows */
-  .unit-row:hover {
-    background-color: #f9f9f9;
-  }
-</style>
+{% block extra_js %}
+<script src="{% static 'js/edit_units.js' %}"></script>
 {% endblock %}

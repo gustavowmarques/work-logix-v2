@@ -224,16 +224,28 @@ UNIT_TYPES = [
     ('commercial', 'Commercial Unit'),
 ]
 
-class UnitForm(forms.Form):
-    unit_number = forms.CharField(max_length=20)
-    unit_type = forms.ChoiceField(choices=UNIT_TYPES)
-    unit_contact_name = forms.CharField(max_length=100)
-    unit_contact_number = forms.CharField(max_length=20)
-    unit_contact_email = forms.EmailField()
-    eircode = forms.CharField(max_length=10)
-    street = forms.CharField(max_length=255, required=False)
-    city = forms.CharField(max_length=100, required=False)
-    county = forms.CharField(max_length=100, required=False)
+# --------------------------
+# Unit ModelForm (required for deletions)
+# --------------------------
+class UnitForm(forms.ModelForm):
+    class Meta:
+        model = Unit
+        fields = [
+            'name',
+            'unit_type',
+            'eircode',
+            'street',
+            'city',
+            'county',
+            'unit_contact_name',
+            'unit_contact_email',
+            'unit_contact_number',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
 
 class UnitBulkCreateForm(forms.Form):
     client = forms.ModelChoiceField(
