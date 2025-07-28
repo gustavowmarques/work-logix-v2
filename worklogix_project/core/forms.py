@@ -176,14 +176,10 @@ class WorkOrderForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        client_id = kwargs.pop('client_id', None)
         super().__init__(*args, **kwargs)
 
-        
-        self.fields['client'].queryset = Client.objects.all()
         self.fields['business_type'].queryset = BusinessType.objects.all()
-        self.fields['preferred_contractor'].queryset = Company.objects.none()
-        self.fields['second_contractor'].queryset = Company.objects.none()
+        self.fields['client'].queryset = Client.objects.all()
 
         for field_name, field in self.fields.items():
             if isinstance(field.widget, CheckboxInput):
@@ -191,15 +187,33 @@ class WorkOrderForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control'})
 
-        # Pre-populate unit dropdown based on client
+        # Set empty defaults
+        self.fields['unit'].queryset = Unit.objects.none()
+        self.fields['preferred_contractor'].queryset = Company.objects.none()
+        self.fields['second_contractor'].queryset = Company.objects.none()
+
+        # Filter units by client
         if 'client' in self.data:
             try:
                 client_id = int(self.data.get('client'))
                 self.fields['unit'].queryset = Unit.objects.filter(client_id=client_id)
             except (ValueError, TypeError):
-                self.fields['unit'].queryset = Unit.objects.none()
+                pass
         elif self.instance.pk and self.instance.client:
             self.fields['unit'].queryset = Unit.objects.filter(client=self.instance.client)
+
+        # Filter contractors by business type
+        if 'business_type' in self.data:
+            try:
+                business_type_id = int(self.data.get('business_type'))
+                contractor_qs = Company.objects.filter(
+                    is_contractor=True,
+                    business_type_id=business_type_id
+                )
+                self.fields['preferred_contractor'].queryset = contractor_qs
+                self.fields['second_contractor'].queryset = contractor_qs
+            except (ValueError, TypeError):
+                pass
 
 
 
