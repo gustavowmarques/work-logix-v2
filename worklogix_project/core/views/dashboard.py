@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from core.decorators import property_manager_required, contractor_required, assistant_required
 from core.models import Company, WorkOrder
+from django.db.models import Q
 
 
 @property_manager_required
@@ -15,20 +16,28 @@ def pm_dashboard(request):
         'clients': clients,
     })
 
+
 @contractor_required
 def contractor_dashboard(request):
     """
-    Contractor dashboard showing company info and assigned work orders.
+    Contractor dashboard showing company info and all related work orders.
+    Displays:
+    - New work orders where the company is preferred or second contractor
+    - Assigned work orders where the company is actively working on it
     """
-    my_company = request.user.company
-    my_assigned_orders = WorkOrder.objects.filter(
-        assigned_contractor=my_company
-    ).exclude(status='completed')
+    contractor_company = request.user.company
 
-    return render(request, 'core/dashboards/contractor_dashboard.html', {
-        'my_company': my_company,
-        'my_assigned_orders': my_assigned_orders,
+    # All work orders where the company is either preferred or second
+    related_work_orders = WorkOrder.objects.filter(
+        Q(preferred_contractor=contractor_company) |
+        Q(second_contractor=contractor_company)
+    ).distinct()
+
+    return render(request, 'core/dashboards/contractor_dashboard.html',{
+        'my_company': contractor_company,
+        'my_assigned_orders': related_work_orders,
     })
+
 
 @assistant_required
 def assistant_dashboard(request):
