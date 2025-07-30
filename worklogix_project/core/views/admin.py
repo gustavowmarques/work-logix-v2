@@ -28,7 +28,7 @@ def admin_dashboard(request):
         'open_work_orders': WorkOrder.objects.filter(status='open'),
         'completed_work_orders': WorkOrder.objects.filter(status='completed'),
     }
-    return render(request, 'core/dashboards/admin_dashboard.html', context)
+    return render(request, 'core/admin/admin_dashboard.html', context)
 
 # ==========================
 # User Management

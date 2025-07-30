@@ -1,42 +1,30 @@
 {% extends 'core/base.html' %}
-{% block title %}My Work Orders{% endblock %}
-
 {% block content %}
-<div class="container">
-  <h2 class="mb-4">My Work Orders</h2>
-
-  {% if work_orders %}
-    <table class="table table-bordered table-striped">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Status</th>
-          <th>Created</th>
-          <th>Due Date</th>
-          <th>Priority</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for order in work_orders %}
-          <tr>
-            <td>{{ order.title }}</td>
-            <td>{{ order.get_status_display }}</td>
-            <td>{{ order.created_at|date:"d M Y" }}</td>
-            <td>{{ order.due_date|date:"d M Y" }}</td>
-            <td>{{ order.priority|title }}</td>
-            <td>
-              <a href="#" class="btn btn-sm btn-outline-primary">View</a>
-              {% if order.status == 'returned' %}
-                <span class="text-warning">Returned to You</span>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>No work orders found.</p>
-  {% endif %}
-</div>
+<h2>My Work Orders</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Status</th>
+      <th>Due Date</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in work_orders %}
+      <tr>
+        <td>{{ order.title }}</td>
+        <td>{{ order.status }}</td>
+        <td>{{ order.due_date }}</td>
+        <td>
+          <a href="{% url 'work_order_detail' order.id %}" class="btn btn-sm btn-primary">View</a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4">No work orders found.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

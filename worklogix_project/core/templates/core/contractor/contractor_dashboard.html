@@ -42,10 +42,18 @@
               <small class="text-muted">Due: {{ work_order.due_date }}</small><br>
               <span>Status: <strong>{{ work_order.get_status_display }}</strong></span><br>
 
+              <!-- New Work Order: Show Accept/Reject -->
               {% if work_order.status == 'New' %}
                 <div class="mt-2">
                   <a href="{% url 'accept_work_order' work_order.id %}" class="btn btn-success btn-sm">Accept</a>
                   <a href="{% url 'reject_work_order' work_order.id %}" class="btn btn-danger btn-sm">Reject</a>
+                </div>
+              {% endif %}
+
+              <!-- Accepted Work Order: Show "Mark as Completed" -->
+              {% if work_order.status == 'Accepted' %}
+                <div class="mt-2">
+                  <a href="{% url 'complete_work_order' work_order.id %}" class="btn btn-primary btn-sm">Mark as Completed</a>
                 </div>
               {% endif %}
             </li>

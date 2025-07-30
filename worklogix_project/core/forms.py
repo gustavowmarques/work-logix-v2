@@ -1,7 +1,8 @@
+# core/forms.py
+
 from django import forms
 from django.forms import CheckboxInput, Textarea, DateInput
 from django.contrib.auth.forms import UserCreationForm
-from core.models import Client
 
 from core.models import (
     CustomUser,
@@ -13,26 +14,23 @@ from core.models import (
     UnitGroup,
 )
 
-
 # ===============================================================
-# Shared Styling Base
+# Shared Styling Base for Bootstrap 5
 # ===============================================================
 class StyledModelForm(forms.ModelForm):
     """
-    Base form class that applies Bootstrap 5 styling to all fields.
+    Base form that applies Bootstrap 5 styling to all fields.
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             widget = field.widget
-
             if isinstance(widget, CheckboxInput):
                 widget.attrs.update({'class': 'form-check-input'})
             elif isinstance(widget, Textarea):
                 widget.attrs.update({'class': 'form-control', 'rows': 3})
             else:
                 widget.attrs.update({'class': 'form-control'})
-
 
 # ===============================================================
 # User Form
@@ -57,32 +55,25 @@ class CustomUserCreationForm(UserCreationForm):
             raise forms.ValidationError("Non-admin users must be assigned to a company.")
         return company
 
-
 # ===============================================================
 # Company Form
 # ===============================================================
 class CompanyCreationForm(StyledModelForm):
     """
-    Form for creating new companies (contractor, PM, or client).
-    Includes Business Type dropdown and conditional validation.
+    Form for creating and editing companies.
     """
     class Meta:
         model = Company
         fields = [
-            'name',
-            'address',
-            'email',
-            'phone',
-            'website',
-            'is_contractor',
-            'is_property_manager',
-            'business_type',
+            'name', 'registration_number', 'email', 'telephone',
+            'contact_name', 'contact_email', 'address', 'business_type',
+            'is_contractor', 'is_property_manager'
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['business_type'].queryset = BusinessType.objects.all().order_by('name')
-        self.fields['business_type'].required = False  # Required only if is_contractor
+        self.fields['business_type'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
@@ -98,77 +89,47 @@ class CompanyCreationForm(StyledModelForm):
 # Client Form
 # ===============================================================
 class ClientCreationForm(StyledModelForm):
-    # These fields are for unit generation & address prefilling
-    default_eircode = forms.CharField(
-        label="Shared Eircode (for unit address pre-fill)",
-        max_length=10,
-        required=False
-    )
-    num_apartments = forms.IntegerField(min_value=0, initial=0, label="Number of Apartments")
-    num_duplexes = forms.IntegerField(min_value=0, initial=0, label="Number of Duplexes")
-    num_houses = forms.IntegerField(min_value=0, initial=0, label="Number of Houses")
-    num_commercial_units = forms.IntegerField(min_value=0, initial=0, label="Number of Commercial Units")
+    default_eircode = forms.CharField(label="Shared Eircode", max_length=10, required=False)
+    num_apartments = forms.IntegerField(min_value=0, initial=0)
+    num_duplexes = forms.IntegerField(min_value=0, initial=0)
+    num_houses = forms.IntegerField(min_value=0, initial=0)
+    num_commercial_units = forms.IntegerField(min_value=0, initial=0)
 
-    
-    unit_contact_name = forms.CharField(
-        label="Default Contact Name for Units",
-        max_length=100,
-        required=False
-    )
-    unit_contact_number = forms.CharField(
-        label="Default Contact Number for Units",
-        max_length=20,
-        required=False
-    )
-    unit_contact_email = forms.EmailField(
-        label="Default Contact Email for Units",
-        required=False
-    )
+    unit_contact_name = forms.CharField(max_length=100, required=False)
+    unit_contact_number = forms.CharField(max_length=20, required=False)
+    unit_contact_email = forms.EmailField(required=False)
 
     class Meta:
         model = Client
-        fields = ['name', 'address', 'company', 'notes'] 
+        fields = ['name', 'address', 'company', 'notes']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['company'].queryset = Company.objects.filter(is_property_manager=True)
 
+# ===============================================================
+# Unit Generator Form
+# ===============================================================
 class UnitGeneratorForm(forms.Form):
-    client = forms.ModelChoiceField(queryset=Client.objects.all(), label="Client")
-    prefix = forms.CharField(max_length=50, label="Prefix", initial="Unit")
-    start = forms.IntegerField(min_value=1, label="Start Number")
-    end = forms.IntegerField(min_value=1, label="End Number")
+    client = forms.ModelChoiceField(queryset=Client.objects.all())
+    prefix = forms.CharField(max_length=50, initial="Unit")
+    start = forms.IntegerField(min_value=1)
+    end = forms.IntegerField(min_value=1)
 
     def clean(self):
         cleaned_data = super().clean()
-        start = cleaned_data.get('start')
-        end = cleaned_data.get('end')
-
-        if start and end and end < start:
+        if cleaned_data.get('end') < cleaned_data.get('start'):
             raise forms.ValidationError("End number must be greater than or equal to start number.")
-
 
 # ===============================================================
 # Work Order Form
 # ===============================================================
 class WorkOrderForm(forms.ModelForm):
-    """
-    Used by Admins or Property Managers to create Work Orders.
-    Filters contractors based on business type.
-    """
     class Meta:
         model = WorkOrder
         fields = [
-            'title',
-            'description',
-            'priority',
-            'business_type',
-            'client',
-            'unit',
-            'preferred_contractor',
-            'second_contractor',
-            'due_date',
-            'attachment',
+            'title', 'description', 'priority', 'business_type', 'client', 'unit',
+            'preferred_contractor', 'second_contractor', 'due_date', 'attachment'
         ]
         widgets = {
             'description': Textarea(attrs={'rows': 4}),
@@ -180,19 +141,13 @@ class WorkOrderForm(forms.ModelForm):
 
         self.fields['business_type'].queryset = BusinessType.objects.all()
         self.fields['client'].queryset = Client.objects.all()
-
-        for field_name, field in self.fields.items():
-            if isinstance(field.widget, CheckboxInput):
-                field.widget.attrs.update({'class': 'form-check-input'})
-            else:
-                field.widget.attrs.update({'class': 'form-control'})
-
-        # Set empty defaults
         self.fields['unit'].queryset = Unit.objects.none()
         self.fields['preferred_contractor'].queryset = Company.objects.none()
         self.fields['second_contractor'].queryset = Company.objects.none()
 
-        # Filter units by client
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
+
         if 'client' in self.data:
             try:
                 client_id = int(self.data.get('client'))
@@ -202,36 +157,18 @@ class WorkOrderForm(forms.ModelForm):
         elif self.instance.pk and self.instance.client:
             self.fields['unit'].queryset = Unit.objects.filter(client=self.instance.client)
 
-        # Filter contractors by business type
         if 'business_type' in self.data:
             try:
-                business_type_id = int(self.data.get('business_type'))
-                contractor_qs = Company.objects.filter(
-                    is_contractor=True,
-                    business_type_id=business_type_id
-                )
-                self.fields['preferred_contractor'].queryset = contractor_qs
-                self.fields['second_contractor'].queryset = contractor_qs
+                bt_id = int(self.data.get('business_type'))
+                contractors = Company.objects.filter(is_contractor=True, business_type_id=bt_id)
+                self.fields['preferred_contractor'].queryset = contractors
+                self.fields['second_contractor'].queryset = contractors
             except (ValueError, TypeError):
                 pass
-
-
 
 # ===============================================================
 # Unit Forms
 # ===============================================================
-class UnitCreationForm(forms.ModelForm):
-    class Meta:
-        model = Unit
-        fields = ['name', 'client']
-
-
-class UnitGroupCreationForm(forms.ModelForm):
-    class Meta:
-        model = UnitGroup
-        fields = ['client', 'num_apartments', 'num_duplexes', 'num_houses', 'num_commercial_units']
-
-
 UNIT_TYPES = [
     ('apartment', 'Apartment'),
     ('duplex', 'Duplex'),
@@ -239,22 +176,22 @@ UNIT_TYPES = [
     ('commercial', 'Commercial Unit'),
 ]
 
-# --------------------------
-# Unit ModelForm (required for deletions)
-# --------------------------
+class UnitCreationForm(forms.ModelForm):
+    class Meta:
+        model = Unit
+        fields = ['name', 'client']
+
+class UnitGroupCreationForm(forms.ModelForm):
+    class Meta:
+        model = UnitGroup
+        fields = ['client', 'num_apartments', 'num_duplexes', 'num_houses', 'num_commercial_units']
+
 class UnitForm(forms.ModelForm):
     class Meta:
         model = Unit
         fields = [
-            'name',
-            'unit_type',
-            'eircode',
-            'street',
-            'city',
-            'county',
-            'unit_contact_name',
-            'unit_contact_email',
-            'unit_contact_number',
+            'name', 'unit_type', 'eircode', 'street', 'city', 'county',
+            'unit_contact_name', 'unit_contact_email', 'unit_contact_number'
         ]
 
     def __init__(self, *args, **kwargs):
@@ -263,27 +200,12 @@ class UnitForm(forms.ModelForm):
             field.widget.attrs.update({'class': 'form-control'})
 
 class UnitBulkCreateForm(forms.Form):
-    client = forms.ModelChoiceField(
-        queryset=Client.objects.all(),
-        label="Client",
-        help_text="Select the client to assign units to.",
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-    prefix = forms.CharField(
-        max_length=50,
-        initial="Apt",
-        label="Unit Prefix",
-        help_text="Prefix for each unit name (e.g., Apt, Unit, Flat).",
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
-    start_number = forms.IntegerField(
-        min_value=1,
-        initial=1,
-        label="Start Number",
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
-    quantity = forms.IntegerField(
-        min_value=1,
-        label="Number of Units to Create",
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
-    )
+    client = forms.ModelChoiceField(queryset=Client.objects.all(), label="Client")
+    prefix = forms.CharField(max_length=50, initial="Apt", label="Unit Prefix")
+    start_number = forms.IntegerField(min_value=1, initial=1)
+    quantity = forms.IntegerField(min_value=1)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})

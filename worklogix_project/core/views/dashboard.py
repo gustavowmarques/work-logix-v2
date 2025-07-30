@@ -1,52 +1,35 @@
-from django.shortcuts import render
-from core.decorators import property_manager_required, contractor_required, assistant_required
-from core.models import Company, WorkOrder
-from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from core.models.work_order import WorkOrder
 
+@login_required
+def admin_dashboard(request):
+    return render(request, 'core/admin/admin_dashboard.html')
 
-@property_manager_required
+@login_required
 def pm_dashboard(request):
-    """
-    Property Manager dashboard with linked clients and contractors.
-    """
-    contractors = Company.objects.filter(is_contractor=True)
-    clients = Company.objects.filter(is_client=True)
-    return render(request, 'core/dashboards/pm_dashboard.html', {
-        'contractors': contractors,
-        'clients': clients,
-    })
+    return render(request, 'core/property_manager/pm_dashboard.html')
 
-
-@contractor_required
-def contractor_dashboard(request):
-    """
-    Contractor dashboard showing company info and all related work orders.
-    Displays:
-    - New work orders where the company is preferred or second contractor
-    - Assigned work orders where the company is actively working on it
-    """
-    contractor_company = request.user.company
-
-    # All work orders where the company is either preferred or second
-    related_work_orders = WorkOrder.objects.filter(
-        Q(preferred_contractor=contractor_company) |
-        Q(second_contractor=contractor_company)
-    ).distinct()
-
-    return render(request, 'core/dashboards/contractor_dashboard.html',{
-        'my_company': contractor_company,
-        'my_assigned_orders': related_work_orders,
-    })
-
-
-@assistant_required
+@login_required
 def assistant_dashboard(request):
-    """
-    Assistant dashboard (read-only view of clients/contractors).
-    """
-    clients = Company.objects.filter(is_client=True)
-    contractors = Company.objects.filter(is_contractor=True)
-    return render(request, 'core/dashboards/assistant_dashboard.html', {
-        'clients': clients,
-        'contractors': contractors,
+    return render(request, 'core/assistant/assistant_dashboard.html')
+
+@login_required
+def contractor_dashboard(request):
+    contractor_company = getattr(request.user, 'company', None)
+
+    if not contractor_company:
+        return redirect('login')
+
+    # Filter relevant work orders
+    work_orders = WorkOrder.objects.filter(
+        preferred_contractor=contractor_company,
+        assigned_contractor__isnull=True,
+        rejected_by_first=False,
+        returned_to_creator=False
+    )
+
+    return render(request, 'core/contractor/contractor_dashboard.html', {
+        'my_company': contractor_company,
+        'my_assigned_orders': work_orders,
     })

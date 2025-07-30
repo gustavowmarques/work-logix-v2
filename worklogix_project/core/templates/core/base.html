@@ -48,7 +48,8 @@
 
         {% elif request.user.role == 'contractor' %}
           <li class="nav-item"><a href="{% url 'contractor_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'contractor_dashboard' %}active{% endif %}">Dashboard</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-white">My Work Orders</a></li>
+          <a class="nav-link" href="{% url 'my_work_orders' %}">My Work Orders</a>
+
 
         {% elif request.user.role == 'assistant' %}
           <li class="nav-item"><a href="{% url 'assistant_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'assistant_dashboard' %}active{% endif %}">Dashboard</a></li>
