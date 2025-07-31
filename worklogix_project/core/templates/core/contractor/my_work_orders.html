@@ -5,6 +5,26 @@
 <div class="container">
   <h2 class="mb-4">My Work Orders</h2>
 
+  <!-- Filter & Search Form -->
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-6">
+      <input type="text" name="q" class="form-control" placeholder="Search by title or description"
+             value="{{ query }}">
+    </div>
+    <div class="col-md-4">
+      <select name="status" class="form-select">
+        <option value="">All Statuses</option>
+        <option value="new" {% if status_filter == 'new' %}selected{% endif %}>New</option>
+        <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>Assigned</option>
+        <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+        <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+  </form>
+
   {% if work_orders %}
     <table class="table table-bordered table-striped">
       <thead>
@@ -36,7 +56,7 @@
       </tbody>
     </table>
   {% else %}
-    <p>No work orders found.</p>
+    <p class="text-muted">No work orders found.</p>
   {% endif %}
 </div>
 {% endblock %}

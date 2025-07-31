@@ -19,52 +19,79 @@
   <div class="d-flex min-vh-100">
 
     <!-- Sidebar -->
-    <div class="sidebar bg-dark text-white p-3">
-      <h4 class="mb-4">Work Logix</h4>
-      <ul class="nav flex-column">
-        <li class="nav-item">
-          <a href="{% url 'redirect_after_login' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'redirect_after_login' %}active{% endif %}">
-            Dashboard
-          </a>
-        </li>
+<div class="sidebar bg-dark text-white p-3">
+  <h4 class="mb-4">Work Logix</h4>
+  <ul class="nav flex-column">
 
-        {% if request.user.role in 'admin property_manager assistant' %}
-        <li class="nav-item">
-          <a href="{% url 'create_work_order' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'create_work_order' %}active{% endif %}">
-            Create Work Order
-          </a>
-        </li>
-        {% endif %}
+    <!-- All Users: Redirect to role-based dashboard -->
+    <li class="nav-item">
+      <a href="{% url 'redirect_after_login' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'redirect_after_login' %}active{% endif %}">
+        Dashboard
+      </a>
+    </li>
 
-        {% if request.user.role == 'admin' %}
-          <li class="nav-item"><a href="{% url 'manage_users' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'manage_users' %}active{% endif %}">Manage Users</a></li>
-          <li class="nav-item"><a href="{% url 'manage_clients' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'manage_clients' %}active{% endif %}">Manage Clients</a></li>
-          <li class="nav-item"><a href="{% url 'manage_companies' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'manage_companies' %}active{% endif %}">Manage Companies</a></li>
-          <li class="nav-item"><a href="#" class="nav-link text-white">View All Work Orders</a></li>
-          <li class="nav-item"><a href="{% url 'create_unit' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'create_unit' %}active{% endif %}">Create Unit</a></li>
+    <!-- Admin, PM, Assistant: Create Work Order -->
+    {% if request.user.role in 'admin property_manager assistant' %}
+    <li class="nav-item">
+      <a href="{% url 'create_work_order' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'create_work_order' %}active{% endif %}">
+        Create Work Order
+      </a>
+    </li>
+    {% endif %}
 
-        {% elif request.user.role == 'property_manager' %}
-          <li class="nav-item"><a href="{% url 'my_work_orders' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'my_work_orders' %}active{% endif %}">My Work Orders</a></li>
+    <!-- Admin Only -->
+    {% if request.user.role == 'admin' %}
+      <li class="nav-item">
+        <a href="{% url 'manage_users' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'manage_users' %}active{% endif %}">Manage Users</a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'manage_clients' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'manage_clients' %}active{% endif %}">Manage Clients</a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'manage_companies' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'manage_companies' %}active{% endif %}">Manage Companies</a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link text-white">View All Work Orders</a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'create_unit' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'create_unit' %}active{% endif %}">Create Unit</a>
+      </li>
 
-        {% elif request.user.role == 'contractor' %}
-          <li class="nav-item"><a href="{% url 'contractor_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'contractor_dashboard' %}active{% endif %}">Dashboard</a></li>
-          <a class="nav-link" href="{% url 'my_work_orders' %}">My Work Orders</a>
+    <!-- Property Manager -->
+    {% elif request.user.role == 'property_manager' %}
+      <li class="nav-item">
+        <a href="{% url 'my_work_orders' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'my_work_orders' %}active{% endif %}">My Work Orders</a>
+      </li>
 
+    <!-- Contractor -->
+    {% elif request.user.role == 'contractor' %}
+      <li class="nav-item">
+        <a href="{% url 'contractor_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'contractor_dashboard' %}active{% endif %}">Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'my_contractor_orders' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'my_contractor_orders' %}active{% endif %}">My Work Orders</a>
+      </li>
 
-        {% elif request.user.role == 'assistant' %}
-          <li class="nav-item"><a href="{% url 'assistant_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'assistant_dashboard' %}active{% endif %}">Dashboard</a></li>
-          <li class="nav-item"><a href="{% url 'my_work_orders' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'my_work_orders' %}active{% endif %}">My Work Orders</a></li>
-        {% endif %}
+    <!-- Assistant -->
+    {% elif request.user.role == 'assistant' %}
+      <li class="nav-item">
+        <a href="{% url 'assistant_dashboard' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'assistant_dashboard' %}active{% endif %}">Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'my_work_orders' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'my_work_orders' %}active{% endif %}">My Work Orders</a>
+      </li>
+    {% endif %}
 
-        <!-- Logout -->
-        <li class="nav-item mt-3">
-          <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-          </form>
-        </li>
-      </ul>
-    </div>
+    <!-- Logout for All Users -->
+    <li class="nav-item mt-3">
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+      </form>
+    </li>
+  </ul>
+</div>
+
 
     <!-- Main Content Area -->
     <div class="content-area flex-grow-1 p-4 bg-light">

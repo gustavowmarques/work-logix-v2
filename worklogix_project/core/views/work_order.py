@@ -122,13 +122,32 @@ def load_units_for_client(request):
 # -------------------------------
 @login_required
 def view_work_order_detail(request, work_order_id):
+    #Fetch the work order or return 404 if not found
     work_order = get_object_or_404(WorkOrder, id=work_order_id)
 
-    if request.user.company not in [work_order.preferred_contractor, work_order.second_contractor]:
-        return redirect('contractor_dashboard')  # Prevent unauthorized view
+    #Prevent unauthorized access by checking company association
+    if request.user.company not in [work_order.preferred_contractor, work_order.second_contractor, work_order.assigned_contractor]:
+        return redirect('contractor_dashboard')
 
+    #Logic flag to show Accept/Reject buttons
+    can_accept_or_reject = (
+        request.user.role == 'contractor' and
+        work_order.status == 'new' and
+        (request.user.company == work_order.preferred_contractor or request.user.company == work_order.second_contractor)
+    )
+
+    #Logic flag to show Complete form/button
+    can_mark_complete = (
+        request.user.role == 'contractor' and
+        work_order.status == 'accepted' and
+        work_order.assigned_contractor == request.user.company
+    )
+
+    #Render template with work order and flags
     return render(request, 'contractor/work_order_detail.html', {
-        'order': work_order
+        'order': work_order,
+        'can_accept_or_reject': can_accept_or_reject,
+        'can_mark_complete': can_mark_complete
     })
 
 
@@ -137,17 +156,34 @@ def view_work_order_detail(request, work_order_id):
 # -------------------------------
 @login_required
 def my_contractor_orders(request):
-    """
-    Show all work orders where the current user's company is either preferred or second contractor
-    and the order is not yet completed.
-    """
+    if request.user.role != 'contractor':
+        return HttpResponseForbidden("Not allowed")
+    
     contractor = request.user.company
+    query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
 
+    
+    # Base queryset
     assigned_orders = WorkOrder.objects.filter(
         Q(preferred_contractor=contractor) | Q(second_contractor=contractor),
         status__in=['new', 'assigned', 'accepted']
-    ).order_by('-created_at')
+    )
 
-    return render(request, 'contractor/my_work_orders.html', {
-        'my_assigned_orders': assigned_orders
+    #Search filter
+    if query:
+        assigned_orders = assigned_orders.filter(
+            Q(title__icontains=query) | Q(description__icontains=query)
+        )
+
+    #Status filter
+    if status_filter:
+        assigned_orders = assigned_orders.filter(status=status_filter)
+
+    assigned_orders = assigned_orders.order_by('-created_at')
+
+    return render(request, 'core/contractor/my_work_orders.html', {
+        'my_assigned_orders': assigned_orders,
+        'query': query,
+        'status_filter': status_filter,
     })

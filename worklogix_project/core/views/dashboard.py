@@ -14,22 +14,32 @@ def pm_dashboard(request):
 def assistant_dashboard(request):
     return render(request, 'core/assistant/assistant_dashboard.html')
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from core.models import WorkOrder  # adjust import as needed
+
 @login_required
 def contractor_dashboard(request):
-    contractor_company = getattr(request.user, 'company', None)
+    # Defensive check: Ensure user is linked to a company
+    if not request.user.company:
+        messages.error(request, "Your user account is not linked to a company.")
+        return redirect('dashboard_home')  # 🔁 Replace with your actual safe fallback route name
 
-    if not contractor_company:
-        return redirect('login')
+    # Reference to the user's company
+    contractor = request.user.company
 
-    # Filter relevant work orders
-    work_orders = WorkOrder.objects.filter(
-        preferred_contractor=contractor_company,
-        assigned_contractor__isnull=True,
-        rejected_by_first=False,
-        returned_to_creator=False
-    )
+    # Optional: If the company has a nested 'company' relationship (e.g., a profile model)
+    company = contractor.company if hasattr(contractor, 'company') else contractor
 
+    # Get all active work orders assigned to this contractor (not completed)
+    active_work_orders = WorkOrder.objects.filter(
+        assigned_contractor=contractor
+    ).exclude(status='completed').order_by('due_date')
+
+    # Render contractor dashboard with company info and relevant work orders
     return render(request, 'core/contractor/contractor_dashboard.html', {
-        'my_company': contractor_company,
-        'my_assigned_orders': work_orders,
+        'company': company,
+        'work_orders': active_work_orders
     })
+
