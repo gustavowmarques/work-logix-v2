@@ -5,29 +5,26 @@
 <div class="container">
   <h1 class="mb-4">Contractor Dashboard</h1>
 
-  <!-- Company Info -->
-  <div class="card border-primary shadow-sm mb-4">
-    <div class="card-body">
-      <h5 class="card-title">Company Information</h5>
-      {% if my_company %}
-        <ul class="list-group">
-          <li class="list-group-item"><strong>Name:</strong> {{ my_company.name }}</li>
-          <li class="list-group-item"><strong>Email:</strong> {{ my_company.email }}</li>
-          <li class="list-group-item"><strong>Phone:</strong> {{ my_company.phone }}</li>
-          <li class="list-group-item"><strong>Website:</strong> 
-            {% if my_company.website %}
-              <a href="{{ my_company.website }}" target="_blank">{{ my_company.website }}</a>
-            {% else %}
-              <span class="text-muted">Not provided</span>
-            {% endif %}
-          </li>
-          <li class="list-group-item"><strong>Address:</strong> {{ my_company.address|default:"Not provided" }}</li>
-        </ul>
-      {% else %}
-        <p class="text-danger">Company information is not available. Please contact an administrator.</p>
-      {% endif %}
-    </div>
+<!-- Company Info -->
+<div class="card border-primary shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Company Information</h5>
+    <ul class="list-group">
+      <li class="list-group-item"><strong>Name:</strong> {{ company.name|default:"Not provided" }}</li>
+      <li class="list-group-item"><strong>Email:</strong> {{ company.email|default:"Not provided" }}</li>
+      <li class="list-group-item"><strong>Phone:</strong> {{ company.phone|default:"Not provided" }}</li>
+      <li class="list-group-item"><strong>Website:</strong> 
+        {% if company.website %}
+          <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+        {% else %}
+          <span class="text-muted">Not provided</span>
+        {% endif %}
+      </li>
+      <li class="list-group-item"><strong>Address:</strong> {{ company.address|default:"Not provided" }}</li>
+    </ul>
   </div>
+</div>
+
 
   <!-- Work Orders -->
   <div class="card border-secondary shadow-sm">
