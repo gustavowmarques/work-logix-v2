@@ -1,5 +1,15 @@
 from django.urls import path
 from django.shortcuts import redirect
+from core.views.work_order import (
+    create_work_order,
+    view_work_order_detail,
+    accept_work_order,
+    reject_work_order,
+    complete_work_order, 
+    my_contractor_orders,
+    my_work_orders,
+)
+
 
 # ========================
 # AUTHENTICATION VIEWS
@@ -111,6 +121,7 @@ urlpatterns = [
     path('work-orders/<int:work_order_id>/', view_work_order_detail, name='view_work_order_detail'),
     path('work-orders/<int:work_order_id>/accept/', accept_work_order, name='accept_work_order'),
     path('work-orders/<int:work_order_id>/reject/', reject_work_order, name='reject_work_order'),
+    path('work-orders/<int:work_order_id>/complete/', complete_work_order, name='complete_work_order'),
     path('contractor/work-orders/', my_contractor_orders, name='my_contractor_orders'),
     path('my-work-orders/', my_work_orders, name='my_work_orders'),
 

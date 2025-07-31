@@ -5,62 +5,41 @@
 <div class="container">
   <h1 class="mb-4">Contractor Dashboard</h1>
 
-<!-- Company Info -->
-<div class="card border-primary shadow-sm mb-4">
-  <div class="card-body">
-    <h5 class="card-title">Company Information</h5>
-    <ul class="list-group">
-      <li class="list-group-item"><strong>Name:</strong> {{ company.name|default:"Not provided" }}</li>
-      <li class="list-group-item"><strong>Email:</strong> {{ company.email|default:"Not provided" }}</li>
-      <li class="list-group-item"><strong>Phone:</strong> {{ company.phone|default:"Not provided" }}</li>
-      <li class="list-group-item"><strong>Website:</strong> 
-        {% if company.website %}
-          <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
-        {% else %}
-          <span class="text-muted">Not provided</span>
-        {% endif %}
-      </li>
-      <li class="list-group-item"><strong>Address:</strong> {{ company.address|default:"Not provided" }}</li>
-    </ul>
+  <!-- Company Info -->
+  <div class="card border-primary shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Company Information</h5>
+      <ul class="list-group">
+        <li class="list-group-item"><strong>Name:</strong> {{ company.name|default:"Not provided" }}</li>
+        <li class="list-group-item"><strong>Email:</strong> {{ company.email|default:"Not provided" }}</li>
+        <li class="list-group-item"><strong>Phone:</strong> {{ company.phone|default:"Not provided" }}</li>
+        <li class="list-group-item"><strong>Website:</strong> 
+          {% if company.website %}
+            <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+          {% else %}
+            <span class="text-muted">Not provided</span>
+          {% endif %}
+        </li>
+        <li class="list-group-item"><strong>Address:</strong> {{ company.address|default:"Not provided" }}</li>
+      </ul>
+    </div>
   </div>
-</div>
-
 
   <!-- Work Orders -->
   <div class="card border-secondary shadow-sm">
     <div class="card-body">
       <h5 class="card-title">Your Work Orders</h5>
 
-      {% if my_assigned_orders %}
+      {% if work_orders %}
         <ul class="list-group">
-          {% for work_order in my_assigned_orders %}
+          {% for work_order in work_orders %}
             <li class="list-group-item">
-              <strong>{{ work_order.title }}</strong><br>
+              <a href="{% url 'view_work_order_detail' work_order.id %}">
+                <strong>{{ work_order.title }}</strong>
+              </a><br>
               <small class="text-muted">Due: {{ work_order.due_date }}</small><br>
               <span>Status: <strong>{{ work_order.get_status_display }}</strong></span><br>
-
-              <!-- Dynamic Action Buttons Based on Work Order Logic Flags -->
-              {% if work_order.can_accept_or_reject %}
-                <div class="mt-2">
-                  <a href="{% url 'accept_work_order' work_order.id %}" class="btn btn-success btn-sm">Accept</a>
-                  <a href="{% url 'reject_work_order' work_order.id %}" class="btn btn-danger btn-sm">Reject</a>
-                </div>
-              {% elif work_order.can_mark_complete %}
-                <div class="mt-3">
-                  <form method="post" action="{% url 'complete_work_order' work_order.id %}" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="mb-2">
-                      <label for="file" class="form-label">Upload completion file</label>
-                      <input type="file" name="file" class="form-control form-control-sm" required>
-                    </div>
-                    <div class="mb-2">
-                      <label for="notes" class="form-label">Completion Notes</label>
-                      <textarea name="notes" class="form-control form-control-sm" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-sm">Mark as Completed</button>
-                  </form>
-                </div>
-              {% endif %}
+              <!-- Action buttons now shown on detail page only -->
             </li>
           {% endfor %}
         </ul>

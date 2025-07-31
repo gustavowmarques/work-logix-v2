@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+{% block title %}Work Order Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">Work Order Details</h2>
+
+  <!-- Work Order Summary -->
+  <div class="card border-info shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="card-title">{{ order.title }}</h5>
+      <p class="card-text">{{ order.description|default:"No description provided." }}</p>
+
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item"><strong>Status:</strong> {{ order.get_status_display }}</li>
+        <li class="list-group-item"><strong>Due Date:</strong> {{ order.due_date }}</li>
+        <li class="list-group-item"><strong>Created By:</strong> {{ order.created_by.get_full_name|default:"N/A" }}</li>
+        <li class="list-group-item"><strong>Preferred Contractor:</strong> {{ order.preferred_contractor.name }}</li>
+        <li class="list-group-item"><strong>Second Contractor:</strong> {{ order.second_contractor.name }}</li>
+        {% if order.assigned_contractor %}
+          <li class="list-group-item"><strong>Assigned Contractor:</strong> {{ order.assigned_contractor.name }}</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Accept / Reject -->
+  {% if can_accept_or_reject %}
+    <div class="mb-4">
+      <a href="{% url 'accept_work_order' order.id %}" class="btn btn-success me-2">Accept Work Order</a>
+      <a href="{% url 'reject_work_order' order.id %}" class="btn btn-danger">Reject Work Order</a>
+    </div>
+  {% endif %}
+
+  <!-- Completion Form -->
+  {% if can_mark_complete %}
+    <div class="card border-success shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Mark as Completed</h5>
+        <form method="post" action="{% url 'complete_work_order' order.id %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="file" class="form-label">Upload Completion File</label>
+            <input type="file" name="file" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="notes" class="form-label">Completion Notes</label>
+            <textarea name="notes" rows="4" class="form-control" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit and Mark Completed</button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Back Link -->
+  <div class="mt-4">
+    <a href="{% url 'contractor_dashboard' %}" class="btn btn-secondary">&larr; Back to Dashboard</a>
+  </div>
+</div>
+{% endblock %}

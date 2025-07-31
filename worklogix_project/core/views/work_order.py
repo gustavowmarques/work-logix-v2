@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-
+from django.views.decorators.http import require_POST
 from core.decorators import contractor_required
 from core.models import WorkOrder, Unit, Company
 from core.forms import WorkOrderForm
@@ -66,14 +67,22 @@ def my_work_orders(request):
 @contractor_required
 def accept_work_order(request, work_order_id):
     work_order = get_object_or_404(WorkOrder, id=work_order_id)
+    contractor = request.user.company
 
-    if request.user.company != work_order.assigned_contractor:
+    # Allow only if work order is new and this company is preferred or second contractor
+    if (
+        work_order.status != 'new' or
+        contractor not in [work_order.preferred_contractor, work_order.second_contractor]
+    ):
         return HttpResponseForbidden("Not authorized to accept this work order.")
 
+    # Assign this contractor and mark as accepted
+    work_order.assigned_contractor = contractor
     work_order.status = 'accepted'
     work_order.save()
+
     messages.success(request, "You have accepted the work order.")
-    return redirect('my_contractor_orders')
+    return redirect('view_work_order_detail', work_order_id=work_order.id)
 
 
 # -------------------------------
@@ -102,6 +111,30 @@ def reject_work_order(request, work_order_id):
     messages.success(request, "You have rejected the work order.")
     return redirect('my_contractor_orders')
 
+@contractor_required
+@require_POST
+def complete_work_order(request, work_order_id):
+    work_order = get_object_or_404(WorkOrder, id=work_order_id)
+    contractor = request.user.company
+
+    if work_order.status != 'accepted' or work_order.assigned_contractor != contractor:
+        return HttpResponseForbidden("You are not authorized to complete this work order.")
+
+    uploaded_file = request.FILES.get('file')
+    notes = request.POST.get('notes')
+
+    if not uploaded_file or not notes:
+        messages.error(request, "Both file and notes are required.")
+        return redirect('view_work_order_detail', work_order_id=work_order.id)
+
+    work_order.attachment = uploaded_file
+    work_order.completion_notes = notes
+    work_order.completed_at = timezone.now()
+    work_order.status = 'completed'
+    work_order.save()
+
+    messages.success(request, "Work order marked as completed.")
+    return redirect('view_work_order_detail', work_order_id=work_order.id)
 
 # -------------------------------
 # AJAX: Load units for selected client
@@ -122,29 +155,33 @@ def load_units_for_client(request):
 # -------------------------------
 @login_required
 def view_work_order_detail(request, work_order_id):
-    #Fetch the work order or return 404 if not found
+    # Fetch the work order or return 404 if not found
     work_order = get_object_or_404(WorkOrder, id=work_order_id)
 
-    #Prevent unauthorized access by checking company association
-    if request.user.company not in [work_order.preferred_contractor, work_order.second_contractor, work_order.assigned_contractor]:
+    # Prevent unauthorized access
+    if request.user.company not in [
+        work_order.preferred_contractor,
+        work_order.second_contractor,
+        work_order.assigned_contractor,
+    ]:
+        messages.error(request, "You are not authorized to view this work order.")
         return redirect('contractor_dashboard')
 
-    #Logic flag to show Accept/Reject buttons
+    # Logic flag to show Accept/Reject buttons
     can_accept_or_reject = (
         request.user.role == 'contractor' and
         work_order.status == 'new' and
-        (request.user.company == work_order.preferred_contractor or request.user.company == work_order.second_contractor)
+        request.user.company in [work_order.preferred_contractor, work_order.second_contractor]
     )
 
-    #Logic flag to show Complete form/button
+    # Logic flag to show Complete form/button
     can_mark_complete = (
         request.user.role == 'contractor' and
         work_order.status == 'accepted' and
         work_order.assigned_contractor == request.user.company
     )
 
-    #Render template with work order and flags
-    return render(request, 'contractor/work_order_detail.html', {
+    return render(request, 'core/contractor/work_order_detail.html', {
         'order': work_order,
         'can_accept_or_reject': can_accept_or_reject,
         'can_mark_complete': can_mark_complete
