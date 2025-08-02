@@ -59,7 +59,7 @@ def view_company(request, company_id):
         return HttpResponseForbidden("You are not allowed to view this company.")
 
     company = get_object_or_404(Company, id=company_id)
-    return render(request, 'company/view_company.html', {'company': company})
+    return render(request, 'core/admin/view_company.html', {'company': company})
 
 
 # -------------------------------
