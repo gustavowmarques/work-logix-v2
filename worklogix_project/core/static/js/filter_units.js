@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const clientId = this.value;
         if (!clientId) return;
   
-        fetch(`/ajax/get-units/${clientId}/`)
+        fetch(`/api/units/${clientId}/`)
           .then(response => response.json())
           .then(data => {
             unitSelect.innerHTML = '<option value="">---------</option>';

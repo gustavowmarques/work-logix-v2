@@ -15,7 +15,7 @@ def manage_companies(request):
         return HttpResponseForbidden("You are not allowed to view this page.")
 
     companies = Company.objects.all()
-    return render(request, 'company/manage_companies.html', {'companies': companies})
+    return render(request, 'core/admin/manage_companies.html', {'companies': companies})
 
 
 # -------------------------------
@@ -44,7 +44,7 @@ def create_company(request):
     else:
         form = CompanyCreationForm()
 
-    return render(request, 'company/create_company.html', {
+    return render(request, 'core/create_company.html', {
         'form': form,
         'business_types': business_types
     })

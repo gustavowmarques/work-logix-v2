@@ -14,7 +14,7 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item"><strong>Status:</strong> {{ order.get_status_display }}</li>
         <li class="list-group-item"><strong>Due Date:</strong> {{ order.due_date }}</li>
-        <li class="list-group-item"><strong>Created By:</strong> {{ order.created_by.get_full_name|default:"N/A" }}</li>
+        <li class="list-group-item"><strong>Created By:</strong> {{ order.created_by|default:"N/A" }}</li>
         <li class="list-group-item"><strong>Preferred Contractor:</strong> {{ order.preferred_contractor.name }}</li>
         <li class="list-group-item"><strong>Second Contractor:</strong> {{ order.second_contractor.name }}</li>
         {% if order.assigned_contractor %}
