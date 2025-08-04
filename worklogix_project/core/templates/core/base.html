@@ -51,7 +51,7 @@
         <a href="{% url 'manage_companies' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'manage_companies' %}active{% endif %}">Manage Companies</a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link text-white">View All Work Orders</a>
+        <a href="{% url 'admin_work_orders' %}" class="nav-link text-white">View All Work Orders</a>
       </li>
       <li class="nav-item">
         <a href="{% url 'create_unit' %}" class="nav-link text-white {% if request.resolver_match.url_name == 'create_unit' %}active{% endif %}">Create Unit</a>

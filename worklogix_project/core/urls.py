@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from django.shortcuts import redirect
 from core.views.work_order import (
     create_work_order,
@@ -8,6 +8,7 @@ from core.views.work_order import (
     complete_work_order, 
     my_contractor_orders,
     my_work_orders,
+    admin_work_orders_view,
 )
 
 
@@ -83,7 +84,8 @@ from core.views.admin import (
     view_user,
     edit_user,
     delete_user,
-    create_unit,  # Only this function needed here from admin for routing
+    create_unit,
+    
 )
 
 # ========================
@@ -98,6 +100,7 @@ from core.views.api import (
 # URL PATTERNS
 # ========================
 urlpatterns = [
+    
     # --------------------
     # AUTHENTICATION
     # --------------------
@@ -124,6 +127,9 @@ urlpatterns = [
     path('work-orders/<int:work_order_id>/complete/', complete_work_order, name='complete_work_order'),
     path('contractor/work-orders/', my_contractor_orders, name='my_contractor_orders'),
     path('my-work-orders/', my_work_orders, name='my_work_orders'),
+    path('work-orders/admin/', admin_work_orders_view, name='admin_work_orders'),
+
+
 
     # --------------------
     # UNITS

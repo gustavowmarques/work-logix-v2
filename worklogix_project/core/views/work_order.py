@@ -187,6 +187,15 @@ def view_work_order_detail(request, work_order_id):
         'can_mark_complete': can_mark_complete
     })
 
+@login_required
+def admin_work_orders_view(request):
+    if not request.user.role == 'admin':
+        return redirect('dashboard') 
+
+    work_orders = WorkOrder.objects.all().order_by('-created_at')
+    return render(request, 'core/admin/work_orders_list.html', {
+        'work_orders': work_orders
+    })
 
 # -------------------------------
 # Contractor: View assigned work orders

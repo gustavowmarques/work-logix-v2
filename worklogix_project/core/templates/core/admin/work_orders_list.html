@@ -1,0 +1,40 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">All Work Orders</h2>
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Created By</th>
+          <th>Assigned Contractor</th>
+          <th>Created At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in work_orders %}
+        <tr>
+          <td>{{ order.title }}</td>
+          <td><span class="badge bg-info text-dark">{{ order.status }}</span></td>
+          <td>{{ order.created_by }}</td>
+          <td>{{ order.assigned_contractor }}</td>
+          <td>{{ order.created_at|date:"d M Y, H:i" }}</td>
+          <td>
+            <a href="{% url 'view_work_order_detail' order.id %}" class="btn btn-sm btn-outline-primary">View</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center">No work orders found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
