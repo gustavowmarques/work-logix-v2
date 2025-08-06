@@ -2,6 +2,7 @@
 {% block title %}My Work Orders{% endblock %}
 
 {% block content %}
+
 <div class="container">
   <h2 class="mb-4">My Work Orders</h2>
 
@@ -14,11 +15,12 @@
     <div class="col-md-4">
       <select name="status" class="form-select">
         <option value="">All Statuses</option>
-        <option value="new" {% if status_filter == 'new' %}selected{% endif %}>New</option>
-        <option value="assigned" {% if status_filter == 'assigned' %}selected{% endif %}>Assigned</option>
         <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
-        <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
+        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
       </select>
+
+
     </div>
     <div class="col-md-2">
       <button type="submit" class="btn btn-primary w-100">Filter</button>
@@ -41,15 +43,12 @@
         {% for order in work_orders %}
           <tr>
             <td>{{ order.title }}</td>
-            <td>{{ order.get_status_display }}</td>
+            <td>{{ order.status|title }}</td>
             <td>{{ order.created_at|date:"d M Y" }}</td>
             <td>{{ order.due_date|date:"d M Y" }}</td>
             <td>{{ order.priority|title }}</td>
             <td>
               <a href="{% url 'view_work_order_detail' order.id %}" class="btn btn-sm btn-outline-primary">View</a>
-              {% if order.status == 'returned' %}
-                <span class="text-warning">Returned to You</span>
-              {% endif %}
             </td>
           </tr>
         {% endfor %}
@@ -58,5 +57,6 @@
   {% else %}
     <p class="text-muted">No work orders found.</p>
   {% endif %}
+
 </div>
 {% endblock %}
