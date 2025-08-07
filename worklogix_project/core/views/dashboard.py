@@ -4,11 +4,35 @@ from django.contrib import messages
 from django.db.models import Q
 
 from core.models.work_order import WorkOrder
+from core.models import CustomUser, Company, Client
 
 # --- Admin Dashboard ---
 @login_required
 def admin_dashboard(request):
-    return render(request, 'core/admin/admin_dashboard.html')
+    # Work Orders
+    open_work_count = WorkOrder.objects.filter(status__in=['new', 'assigned']).count()
+    in_progress_count = WorkOrder.objects.filter(status='accepted').count()
+    completed_work_count = WorkOrder.objects.filter(status='completed').count()
+
+    # Users
+    users = CustomUser.objects.all()
+
+    # Companies
+    managers = Company.objects.filter(is_property_manager=True) 
+    contractors = Company.objects.filter(is_contractor=True)
+
+    # Clients
+    clients = Client.objects.all()
+
+    return render(request, 'core/admin/admin_dashboard.html', {
+        'open_work_count': open_work_count,
+        'in_progress_count': in_progress_count,
+        'completed_work_count': completed_work_count,
+        'users': users,
+        'managers': managers,
+        'contractors': contractors,
+        'clients': clients,
+    })
 
 
 # --- Property Manager Dashboard ---

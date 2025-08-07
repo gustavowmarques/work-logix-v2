@@ -51,8 +51,9 @@
             View and track submitted work orders across all companies.
           </p>
           <ul class="list-unstyled small mb-2">
-            <li><strong>Open Work Orders:</strong> {{ open_work_orders.count }}</li>
-            <li><strong>Completed:</strong> {{ completed_work_orders.count }}</li>
+            <li><strong>Open Work Orders:</strong> {{ open_work_count }}</li>
+            <strong>In Progress:</strong> {{ in_progress_count }}<br>
+            <li><strong>Completed:</strong> {{ completed_work_count }}</li>
           </ul>
           <a href="{% url 'admin_work_orders' %}" class="btn btn-warning btn-sm">View Work Orders</a>
           <a href="{% url 'create_work_order' %}" class="btn btn-primary btn-sm">Create Work Order</a>

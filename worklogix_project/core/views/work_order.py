@@ -218,36 +218,27 @@ def admin_work_orders_view(request):
 def my_contractor_orders(request):
     if request.user.role != 'contractor':
         return HttpResponseForbidden("Not allowed")
-
+    
     contractor_company = request.user.company
     query = request.GET.get('q', '')
     status_filter = request.GET.get('status', '')
 
-    VALID_STATUSES = ['accepted', 'rejected', 'completed']
-
-    # Start debug prints
-    print(f"\n--- Contractor: {contractor_company}")
-    print(f"Query: '{query}'")
-    print(f"Status filter: '{status_filter}'")
-
-    # Initial queryset
+    # Only show accepted, rejected, or completed work orders assigned to this contractor
     assigned_orders = WorkOrder.objects.filter(
         assigned_contractor=contractor_company,
-        status__in=VALID_STATUSES
+        status__in=['accepted', 'rejected', 'completed']
     )
-    print(f"Initial matched: {assigned_orders.count()}")
 
-    # Apply search filter
+    # Apply search
     if query:
         assigned_orders = assigned_orders.filter(
             Q(title__icontains=query) | Q(description__icontains=query)
         )
-        print(f"After query filter: {assigned_orders.count()}")
 
     # Apply status filter
+    VALID_STATUSES = ['accepted', 'rejected', 'completed']
     if status_filter in VALID_STATUSES:
         assigned_orders = assigned_orders.filter(status=status_filter)
-        print(f"After status filter: {assigned_orders.count()}")
 
     assigned_orders = assigned_orders.order_by('-created_at')
 
