@@ -66,7 +66,7 @@ class CompanyCreationForm(StyledModelForm):
         model = Company
         fields = [
             'name', 'registration_number', 'email', 'telephone',
-            'contact_name', 'contact_email', 'address', 'business_type',
+            'contact_name', 'contact_email', 'address', 'business_type', 'website',
             'is_contractor', 'is_property_manager'
         ]
 
