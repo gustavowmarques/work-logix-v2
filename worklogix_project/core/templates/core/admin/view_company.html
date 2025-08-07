@@ -8,14 +8,29 @@
     </div>
     <div class="card-body">
       <p><strong>Name:</strong> {{ company.name }}</p>
+      <p><strong>Registration Number:</strong> {{ company.registration_number|default:"—" }}</p>
       <p><strong>Email:</strong> {{ company.email }}</p>
-      <p><strong>Phone:</strong> {{ company.phone }}</p>
-      <p><strong>Website:</strong> {{ company.website }}</p>
+      <p><strong>Phone:</strong> {{ company.telephone|default:"—" }}</p>
+      <p><strong>Website:</strong>
+        {% if company.website %}
+          <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+        {% else %}
+          —
+        {% endif %}
+      </p>
       <p><strong>Address:</strong> {{ company.address }}</p>
+      <p><strong>Contact Name:</strong> {{ company.contact_name|default:"—" }}</p>
+      <p><strong>Contact Email:</strong> {{ company.contact_email|default:"—" }}</p>
       <p><strong>Type:</strong>
-        {% if company.is_contractor %} Contractor {% endif %}
-        {% if company.is_property_manager %} Property Manager {% endif %}
-        {% if company.is_client %} Client {% endif %}
+        {% if company.is_contractor and company.is_property_manager %}
+          Contractor & Property Manager
+        {% elif company.is_contractor %}
+          Contractor
+        {% elif company.is_property_manager %}
+          Property Manager
+        {% else %}
+          —
+        {% endif %}
       </p>
       <a href="{% url 'manage_companies' %}" class="btn btn-secondary">Back</a>
     </div>
