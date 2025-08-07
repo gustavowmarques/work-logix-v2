@@ -74,7 +74,7 @@ def edit_company(request, company_id):
     business_types = BusinessType.objects.all()
 
     if request.method == 'POST':
-        form = CompanyForm(request.POST, instance=company)
+        form =CompanyCreationForm(request.POST, instance=company)
         if form.is_valid():
             company = form.save(commit=False)
             business_type_id = request.POST.get('business_type_id')
@@ -84,9 +84,9 @@ def edit_company(request, company_id):
             messages.success(request, "Company updated successfully.")
             return redirect('manage_companies')
     else:
-        form = CompanyForm(instance=company)
+        form =CompanyCreationForm(instance=company)
 
-    return render(request, 'company/edit_company.html', {
+    return render(request, 'core/admin/edit_company.html', {
         'form': form,
         'company': company,
         'business_types': business_types
