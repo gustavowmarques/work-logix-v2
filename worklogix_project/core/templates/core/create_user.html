@@ -20,44 +20,83 @@
       <!-- User form -->
       <form method="post">
         {% csrf_token %}
+
         {% for field in form %}
-            {% if field.name == 'company' %}
-                <!-- Custom rendering for the company dropdown with data-role attributes -->
-                <div class="mb-3">
-                <label class="form-label">{{ field.label_tag }}</label>
-                <select name="company" id="id_company" class="form-select">
-                    <option value="">Select a company</option>
-                    {% for company in companies %}
-                      <option value="{{ company.id }}"
-                              data-role="{% if company.is_contractor %}contractor {% endif %}{% if company.is_property_manager %}pm {% endif %}{% if company.is_client %}client{% endif %}">
-                        {{ company.name }}
-                      </option>
-                    {% endfor %}
-                  </select>                  
-                </div>
-            {% else %}
-                <!-- Normal rendering for all other fields -->
-                <div class="mb-3">
-                <label class="form-label">{{ field.label_tag }}</label>
+
+          {% if field.name == 'company' %}
+            <!-- Company dropdown with data-role attributes -->
+            <div class="mb-3">
+              {{ field.label_tag }}
+              <select name="company" id="id_company" class="form-select">
+                <option value="">Select a company</option>
+                {% for company in companies %}
+                  <option value="{{ company.id }}"
+                          data-role="{% if company.is_contractor %}contractor {% endif %}{% if company.is_property_manager %}pm {% endif %}{% if company.is_client %}client{% endif %}">
+                    {{ company.name }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+            </div>
+
+          {% elif field.name == 'password1' %}
+            <!-- Password 1 with eye toggle -->
+            <div class="mb-3">
+              {{ field.label_tag }}
+              <div class="input-group">
                 {{ field }}
-                {% if field.help_text %}
-                    <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-                {% if field.errors %}
-                    <div class="text-danger small">{{ field.errors }}</div>
-                {% endif %}
-                </div>
-            {% endif %}
-            {% endfor %}
+                <button type="button"
+                        class="btn btn-outline-secondary toggle-pw"
+                        data-target="id_password1"
+                        aria-label="Show password"
+                        aria-pressed="false">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+              {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+              {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+            </div>
+
+          {% elif field.name == 'password2' %}
+            <!-- Password 2 with eye toggle -->
+            <div class="mb-3">
+              {{ field.label_tag }}
+              <div class="input-group">
+                {{ field }}
+                <button type="button"
+                        class="btn btn-outline-secondary toggle-pw"
+                        data-target="id_password2"
+                        aria-label="Show password confirmation"
+                        aria-pressed="false">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+            </div>
+
+          {% else %}
+            <!-- Username, Email, Role, etc. -->
+            <div class="mb-3">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+            </div>
+          {% endif %}
+
+        {% endfor %}
 
         <button type="submit" class="btn btn-success">Create User</button>
         <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
       </form>
+
     </div>
   </div>
 </div>
 
 {% load static %}
 <script src="{% static 'js/filter_companies_by_role.js' %}"></script>
-
+<script src="{% static 'js/toggle_password_visibility.js' %}?v=3"></script>
 {% endblock %}
