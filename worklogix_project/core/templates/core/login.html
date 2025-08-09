@@ -1,5 +1,6 @@
 {% extends "core/base_login.html" %}
 {% load crispy_forms_tags %}
+{% load static %}
 {% block title %}Login | Work Logix{% endblock %}
 
 {% block content %}
@@ -18,7 +19,33 @@
 
         <form method="post" novalidate>
           {% csrf_token %}
-          {{ form|crispy }}
+
+          {# --- Keep crispy for username to preserve your forms config/styles --- #}
+          {{ form.username|as_crispy_field }}
+
+          {# --- Manually render password so we can add an eye toggle beside it --- #}
+          <div class="mb-3">
+            {{ form.password.label_tag }}
+            <div class="input-group">
+              {# crispy would wrap differently; render the widget directly #}
+              {{ form.password }}
+              <button type="button"
+                      class="btn btn-outline-secondary toggle-pw"
+                      data-target="id_password"
+                      aria-label="Show password"
+                      aria-pressed="false">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+            {# optional: show password help/errors if present #}
+            {% if form.password.help_text %}
+              <div class="form-text">{{ form.password.help_text }}</div>
+            {% endif %}
+            {% if form.password.errors %}
+              <div class="text-danger small">{{ form.password.errors }}</div>
+            {% endif %}
+          </div>
+
           <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
 
@@ -29,4 +56,7 @@
     </div>
   </div>
 </div>
+
+{# Re-use the same eye-toggle JS used elsewhere #}
+<script src="{% static 'js/toggle_password_visibility.js' %}?v=3"></script>
 {% endblock %}

@@ -38,7 +38,7 @@
                     <a href="{% url 'view_user' user.id %}" class="btn btn-sm btn-outline-primary">View</a>
                     <a href="{% url 'edit_user' user.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
                     <a href="{% url 'delete_user' user.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
-                    <a href="#" class="btn btn-sm btn-outline-dark disabled" title="Coming soon">Reset Password</a>
+                    <a href="{% url 'reset_user_password' user.id %}" class="btn btn-sm btn-outline-dark">Reset Password</a>
                 </td>                  
               </tr>
             {% empty %}

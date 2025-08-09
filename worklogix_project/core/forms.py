@@ -2,7 +2,7 @@
 
 from django import forms
 from django.forms import CheckboxInput, Textarea, DateInput
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from core.models import (
     CustomUser,
@@ -54,7 +54,26 @@ class CustomUserCreationForm(UserCreationForm):
         if role != 'admin' and not company:
             raise forms.ValidationError("Non-admin users must be assigned to a company.")
         return company
+    
+class CustomUserEditForm(UserChangeForm):
+    role = forms.ChoiceField(choices=CustomUser._meta.get_field('role').choices)
+    company = forms.ModelChoiceField(queryset=Company.objects.all(), required=False)
 
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'role', 'company']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+
+    def clean_company(self):
+        role = self.cleaned_data.get('role')
+        company = self.cleaned_data.get('company')
+        if role != 'admin' and not company:
+            raise forms.ValidationError("Non-admin users must be assigned to a company.")
+        return company
 # ===============================================================
 # Company Form
 # ===============================================================

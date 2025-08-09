@@ -1,14 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.auth.forms import SetPasswordForm
 from core.decorators import admin_required
 from core.models import Company, CustomUser, WorkOrder, Unit, UnitGroup
+from django.http import HttpResponseForbidden
 from core.forms import (
     CustomUserCreationForm,
     CompanyCreationForm,
     UnitCreationForm,
-    UnitGroupCreationForm
+    UnitGroupCreationForm,
+    CustomUserEditForm
 )
 
 # ==========================
@@ -72,7 +74,7 @@ def edit_user(request, user_id):
     Admin view to edit a user.
     """
     user = get_object_or_404(CustomUser, id=user_id)
-    form = CustomUserCreationForm(request.POST or None, instance=user)
+    form = CustomUserEditForm(request.POST or None, instance=user)
     if form.is_valid():
         form.save()
         messages.success(request, "User updated successfully.")
@@ -89,6 +91,29 @@ def delete_user(request, user_id):
     user.delete()
     messages.success(request, "User deleted.")
     return redirect('manage_users')
+
+@login_required
+def reset_user_password(request, user_id):
+    # Only admins should do this
+    if getattr(request.user, "role", None) != "admin":
+        return HttpResponseForbidden("Not allowed")
+
+    target_user = get_object_or_404(CustomUser, id=user_id)
+
+    if request.method == "POST":
+        form = SetPasswordForm(user=target_user, data=request.POST)
+        if form.is_valid():
+            form.save()  # hashes and saves the new password
+            messages.success(request, f"Password for '{target_user.username}' was reset successfully.")
+            return redirect("manage_users")
+    else:
+        form = SetPasswordForm(user=target_user)
+
+    return render(request, "core/admin/reset_password.html", {
+        "form": form,
+        "target_user": target_user,
+    })
+
 
 # ==========================
 # Company Management

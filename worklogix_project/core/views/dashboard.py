@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db.models import Q
-
+from django.http import HttpResponseForbidden
 from core.models.work_order import WorkOrder
 from core.models import CustomUser, Company, Client
 
@@ -51,9 +51,7 @@ def assistant_dashboard(request):
 @login_required
 def contractor_dashboard(request):
     contractor = request.user.company
-    print("Contractor ID:", contractor.id)
-    print("Contractor Name:", contractor.name)
-
+    
     active_work_orders = WorkOrder.objects.filter(
         Q(status='new', preferred_contractor=contractor) |
         Q(status='new', second_contractor=contractor) |

@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from core.decorators import contractor_required
 from core.models import WorkOrder, Unit, Company
 from core.forms import WorkOrderForm
-
+from django.urls import reverse
 
 # -------------------------------
 # Create Work Order (PM/Admin/Assistant)
@@ -169,37 +169,62 @@ def load_units_for_client(request):
 # -------------------------------
 @login_required
 def view_work_order_detail(request, work_order_id):
-    # Fetch the work order or return 404 if not found
-    work_order = get_object_or_404(WorkOrder, id=work_order_id)
+    order = get_object_or_404(WorkOrder, id=work_order_id)
 
-    # Prevent unauthorized access
-    if request.user.company not in [
-        work_order.preferred_contractor,
-        work_order.second_contractor,
-        work_order.assigned_contractor,
-    ]:
-        messages.error(request, "You are not authorized to view this work order.")
-        return redirect('contractor_dashboard')
+    user = request.user
+    role = getattr(user, "role", "")
+    company = getattr(user, "company", None)
 
-    # Logic flag to show Accept/Reject buttons
+    # --- Authorization ---
+    if role == "admin":
+        allowed = True
+    else:
+        allowed = (
+            order.created_by_id == user.id
+            or (
+                company is not None
+                and company in [order.preferred_contractor,
+                                order.second_contractor,
+                                order.assigned_contractor]
+            )
+        )
+
+    if not allowed:
+        return HttpResponseForbidden("Not allowed")
+
+    # --- Role-aware back URL ---
+    if role == "admin":
+        back_url = reverse("admin_work_orders")  # your /work-orders/admin/ list
+    elif role == "contractor":
+        back_url = reverse("contractor_dashboard")  # or 'my_contractor_orders'
+    elif role == "property_manager":
+        back_url = reverse("admin_dashboard")  # or your PM dashboard url
+    else:
+        back_url = reverse("redirect_after_login")
+
+    # --- Contractor-only action flags (unchanged logic) ---
     can_accept_or_reject = (
-        request.user.role == 'contractor' and
-        work_order.status == 'new' and
-        request.user.company in [work_order.preferred_contractor, work_order.second_contractor]
+        role == 'contractor'
+        and order.status == 'new'
+        and company in [order.preferred_contractor, order.second_contractor]
     )
 
-    # Logic flag to show Complete form/button
     can_mark_complete = (
-        request.user.role == 'contractor' and
-        work_order.status == 'accepted' and
-        work_order.assigned_contractor == request.user.company
+        role == 'contractor'
+        and order.status == 'accepted'
+        and order.assigned_contractor == company
     )
 
-    return render(request, 'core/contractor/work_order_detail.html', {
-        'order': work_order,
-        'can_accept_or_reject': can_accept_or_reject,
-        'can_mark_complete': can_mark_complete
-    })
+    return render(
+        request,
+        'core/work_order_detail.html',  # keep your existing template
+        {
+            'order': order,
+            'can_accept_or_reject': can_accept_or_reject,
+            'can_mark_complete': can_mark_complete,
+            'back_url': back_url,   # <-- use this in the template
+        }
+    )
 
 @login_required
 def admin_work_orders_view(request):
