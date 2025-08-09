@@ -9,7 +9,6 @@
     </div>
     <div class="card-body">
 
-      <!-- Display form-level validation errors -->
       {% if form.errors %}
         <div class="alert alert-danger">
           <strong>There were errors in your form:</strong>
@@ -23,23 +22,39 @@
         </div>
       {% endif %}
 
-      <!-- Work Order Form -->
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% for field in form %}
-          <div class="mb-3 field-{{ field.name }}">
-            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.help_text %}
-              <div class="form-text">{{ field.help_text }}</div>
-            {% endif %}
-            {% if field.errors %}
-              <div class="text-danger small">
-                {% for error in field.errors %}{{ error }}<br>{% endfor %}
-              </div>
-            {% endif %}
-          </div>
+          {% if field.name == 'is_common_area' %}
+            <div class="mb-3 form-check">
+              {{ field }}
+              <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            </div>
+
+          {% elif field.name == 'unit' %}
+            <div class="mb-3 field-unit" id="unit-field-group">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="text-danger small">
+                  {% for error in field.errors %}{{ error }}<br>{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+          {% else %}
+            <div class="mb-3 field-{{ field.name }}">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}
+                <div class="text-danger small">
+                  {% for error in field.errors %}{{ error }}<br>{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
         {% endfor %}
 
         <div class="mt-4">
@@ -54,8 +69,7 @@
 {% endblock %}
 
 {% block extra_js %}
-  <!-- Handles business type filtering for contractor fields -->
   <script src="{% static 'js/create_work_order.js' %}"></script>
   <script src="{% static 'js/filter_units.js' %}"></script>
-
+  <script src="{% static 'js/work_order_form.js' %}"></script>
 {% endblock %}

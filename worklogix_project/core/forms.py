@@ -1,7 +1,5 @@
-# core/forms.py
-
 from django import forms
-from django.forms import CheckboxInput, Textarea, DateInput
+from django.forms import CheckboxInput, Textarea, DateInput, ValidationError
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from core.models import (
@@ -144,11 +142,15 @@ class UnitGeneratorForm(forms.Form):
 # Work Order Form
 # ===============================================================
 class WorkOrderForm(forms.ModelForm):
+    # Not stored in DB; controls Unit visibility/requirement
+    is_common_area = forms.BooleanField(required=False, label="Common area")
+
     class Meta:
         model = WorkOrder
         fields = [
             'title', 'description', 'priority', 'business_type', 'client', 'unit',
-            'preferred_contractor', 'second_contractor', 'due_date', 'attachment'
+            'preferred_contractor', 'second_contractor', 'due_date', 'attachment',
+            
         ]
         widgets = {
             'description': Textarea(attrs={'rows': 4}),
@@ -164,9 +166,12 @@ class WorkOrderForm(forms.ModelForm):
         self.fields['preferred_contractor'].queryset = Company.objects.none()
         self.fields['second_contractor'].queryset = Company.objects.none()
 
-        for field in self.fields.values():
+        # Bootstrap classes
+        for name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
+        self.fields['is_common_area'].widget.attrs.update({'class': 'form-check-input'})
 
+        # Populate Unit when client present
         if 'client' in self.data:
             try:
                 client_id = int(self.data.get('client'))
@@ -176,6 +181,7 @@ class WorkOrderForm(forms.ModelForm):
         elif self.instance.pk and self.instance.client:
             self.fields['unit'].queryset = Unit.objects.filter(client=self.instance.client)
 
+        # Populate contractors when business_type present
         if 'business_type' in self.data:
             try:
                 bt_id = int(self.data.get('business_type'))
@@ -184,6 +190,29 @@ class WorkOrderForm(forms.ModelForm):
                 self.fields['second_contractor'].queryset = contractors
             except (ValueError, TypeError):
                 pass
+
+        # Make Unit required only when NOT common area
+        is_common = False
+        if self.data:
+            is_common = self.data.get('is_common_area') in ('on', 'true', '1')
+        self.fields['unit'].required = not is_common
+
+        # ORDER: put checkbox before Unit
+        self.order_fields([
+            'title', 'description', 'priority', 'business_type', 'client',
+            'is_common_area',  # ← checkbox appears before Unit
+            'unit',
+            'preferred_contractor', 'second_contractor', 'due_date', 'attachment',
+        ])
+
+    def clean(self):
+        cleaned = super().clean()
+        is_common = cleaned.get('is_common_area') is True
+        if not is_common and not cleaned.get('unit'):
+            self.add_error('unit', 'Unit is required when this is not a common area.')
+        return cleaned
+
+        
 
 # ===============================================================
 # Unit Forms

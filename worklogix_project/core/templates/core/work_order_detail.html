@@ -1,61 +1,85 @@
-{% extends 'core/base.html' %}
-{% block title %}Work Order Details{% endblock %}
+{% extends "core/base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-4">
-  <h2 class="mb-3">Work Order Details</h2>
-
-  <!-- Work Order Summary -->
-  <div class="card border-info shadow-sm mb-4">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Create Work Order</h4>
+    </div>
     <div class="card-body">
-      <h5 class="card-title">{{ order.title }}</h5>
-      <p class="card-text">{{ order.description|default:"No description provided." }}</p>
 
-      <ul class="list-group list-group-flush">
-        <li class="list-group-item"><strong>Status:</strong> {{ order.get_status_display }}</li>
-        <li class="list-group-item"><strong>Due Date:</strong> {{ order.due_date }}</li>
-        <li class="list-group-item"><strong>Created By:</strong> {{ order.created_by|default:"N/A" }}</li>
-        <li class="list-group-item"><strong>Preferred Contractor:</strong> {{ order.preferred_contractor.name }}</li>
-        <li class="list-group-item"><strong>Second Contractor:</strong> {{ order.second_contractor.name }}</li>
-        {% if order.assigned_contractor %}
-          <li class="list-group-item"><strong>Assigned Contractor:</strong> {{ order.assigned_contractor.name }}</li>
-        {% endif %}
-      </ul>
+      {% if form.errors %}
+        <div class="alert alert-danger">
+          <strong>There were errors in your form:</strong>
+          <ul class="mb-0">
+            {% for field in form %}
+              {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% for field in form %}
+          {% if field.name == 'is_common_area' %}
+            {# Render the Common area checkbox with proper checkbox styling #}
+            <div class="mb-3 form-check">
+              {{ field }}
+              <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}
+                <div class="text-danger small">
+                  {% for error in field.errors %}{{ error }}<br>{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+          {% elif field.name == 'unit' %}
+            {# Wrap Unit so we can hide/show it when Common area is toggled #}
+            <div class="mb-3 field-unit" id="unit-field-group">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}
+                <div class="text-danger small">
+                  {% for error in field.errors %}{{ error }}<br>{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+          {% else %}
+            <div class="mb-3 field-{{ field.name }}">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}
+                <div class="text-danger small">
+                  {% for error in field.errors %}{{ error }}<br>{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+
     </div>
-  </div>
-
-  <!-- Accept / Reject -->
-  {% if can_accept_or_reject %}
-    <div class="mb-4">
-      <a href="{% url 'accept_work_order' order.id %}" class="btn btn-success me-2">Accept Work Order</a>
-      <a href="{% url 'reject_work_order' order.id %}" class="btn btn-danger">Reject Work Order</a>
-    </div>
-  {% endif %}
-
-  <!-- Completion Form -->
-  {% if can_mark_complete %}
-    <div class="card border-success shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Mark as Completed</h5>
-        <form method="post" action="{% url 'complete_work_order' order.id %}" enctype="multipart/form-data">
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="file" class="form-label">Upload Completion File</label>
-            <input type="file" name="file" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label for="notes" class="form-label">Completion Notes</label>
-            <textarea name="notes" rows="4" class="form-control" required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary">Submit and Mark Completed</button>
-        </form>
-      </div>
-    </div>
-  {% endif %}
-
-  <!-- Back Link -->
-  <div class="mt-4">
-    <a href="{{ back_url }}" class="btn btn-secondary">← Back to Dashboard</a>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/create_work_order.js' %}"></script>
+  <script src="{% static 'js/filter_units.js' %}"></script>
+  {# NEW: toggles Unit visibility and required attr #}
+  <script src="{% static 'js/work_order_form.js' %}"></script>
 {% endblock %}
