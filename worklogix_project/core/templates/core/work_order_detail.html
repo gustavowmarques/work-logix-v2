@@ -1,85 +1,93 @@
 {% extends "core/base.html" %}
 {% load static %}
 
+{% block title %}Work Order Details{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
   <div class="card shadow">
-    <div class="card-header bg-primary text-white">
-      <h4 class="mb-0">Create Work Order</h4>
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">{{ order.title }}</h4>
+      <a href="{{ back_url }}" class="btn btn-outline-light btn-sm">← Back to dashboard</a>
     </div>
-    <div class="card-body">
 
-      {% if form.errors %}
-        <div class="alert alert-danger">
-          <strong>There were errors in your form:</strong>
-          <ul class="mb-0">
-            {% for field in form %}
-              {% for error in field.errors %}
-                <li>{{ field.label }}: {{ error }}</li>
-              {% endfor %}
-            {% endfor %}
-          </ul>
-        </div>
+    <div class="card-body">
+      <!-- Details -->
+      <div class="mb-4">
+        <p class="mb-1"><strong>Status:</strong> {{ order.status }}</p>
+        <p class="mb-1"><strong>Due Date:</strong> {{ order.due_date|date:"M d, Y" }}</p>
+        <p class="mb-1"><strong>Created By:</strong> {{ order.created_by }} ({{ order.created_by.role }})</p>
+        <p class="mb-1"><strong>Preferred Contractor:</strong> {{ order.preferred_contractor|default:"—" }}</p>
+        <p class="mb-1"><strong>Second Contractor:</strong> {{ order.second_contractor|default:"—" }}</p>
+        <p class="mb-1"><strong>Assigned Contractor:</strong> {{ order.assigned_contractor|default:"—" }}</p>
+        <p class="mb-1"><strong>Client:</strong> {{ order.client|default:"—" }}</p>
+        <p class="mb-1">
+          <strong>Location:</strong>
+          {% if order.is_common_area %}Common area{% else %}Unit {{ order.unit }}{% endif %}
+        </p>
+        {% if order.description %}
+          <div class="mt-3">
+            <strong>Description</strong>
+            <div class="border rounded p-3 bg-light">{{ order.description|linebreaksbr }}</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Contractor actions -->
+      {% if can_accept_or_reject or can_mark_complete %}
+        <hr class="my-4">
+
+        {% if can_accept_or_reject %}
+          <div class="d-flex gap-2 mb-3">
+            <form method="post" action="{% url 'accept_work_order' order.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success">Accept</button>
+            </form>
+
+            <form method="post" action="{% url 'reject_work_order' order.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger">Reject</button>
+            </form>
+          </div>
+          <p class="text-muted small">
+            You were invited as {% if order.preferred_contractor == request.user.company %}the preferred{% else %}the second{% endif %} contractor.
+          </p>
+        {% endif %}
+
+        {% if can_mark_complete %}
+          <div class="mt-4">
+            <h5>Mark as Completed</h5>
+            <form method="post" action="{% url 'complete_work_order' order.id %}" enctype="multipart/form-data" class="mt-2">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label for="id_notes" class="form-label">Completion notes</label>
+                <textarea name="notes" id="id_notes" class="form-control" rows="4" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="id_file" class="form-label">Attachment (photo/report)</label>
+                <input type="file" name="file" id="id_file" class="form-control" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Submit completion</button>
+            </form>
+          </div>
+        {% endif %}
       {% endif %}
 
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        {% for field in form %}
-          {% if field.name == 'is_common_area' %}
-            {# Render the Common area checkbox with proper checkbox styling #}
-            <div class="mb-3 form-check">
-              {{ field }}
-              <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-              {% if field.errors %}
-                <div class="text-danger small">
-                  {% for error in field.errors %}{{ error }}<br>{% endfor %}
-                </div>
-              {% endif %}
-            </div>
-
-          {% elif field.name == 'unit' %}
-            {# Wrap Unit so we can hide/show it when Common area is toggled #}
-            <div class="mb-3 field-unit" id="unit-field-group">
-              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-              {{ field }}
-              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-              {% if field.errors %}
-                <div class="text-danger small">
-                  {% for error in field.errors %}{{ error }}<br>{% endfor %}
-                </div>
-              {% endif %}
-            </div>
-
-          {% else %}
-            <div class="mb-3 field-{{ field.name }}">
-              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-              {{ field }}
-              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-              {% if field.errors %}
-                <div class="text-danger small">
-                  {% for error in field.errors %}{{ error }}<br>{% endfor %}
-                </div>
-              {% endif %}
-            </div>
-          {% endif %}
-        {% endfor %}
-
-        <div class="mt-4">
-          <button type="submit" class="btn btn-primary">Submit</button>
-          <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
-        </div>
-      </form>
-
+      {% if order.status == 'completed' %}
+        <hr class="my-4">
+        <h5 class="mb-2">Completion</h5>
+        <p class="mb-1"><strong>Completed at:</strong> {{ order.completed_at|date:"M d, Y H:i" }}</p>
+        {% if order.completion_notes %}
+          <div class="mb-2">
+            <strong>Notes:</strong>
+            <div class="border rounded p-3 bg-light">{{ order.completion_notes|linebreaksbr }}</div>
+          </div>
+        {% endif %}
+        {% if order.attachment %}
+          <a class="btn btn-outline-secondary btn-sm" href="{{ order.attachment.url }}" target="_blank">View attachment</a>
+        {% endif %}
+      {% endif %}
     </div>
   </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-  <script src="{% static 'js/create_work_order.js' %}"></script>
-  <script src="{% static 'js/filter_units.js' %}"></script>
-  {# NEW: toggles Unit visibility and required attr #}
-  <script src="{% static 'js/work_order_form.js' %}"></script>
 {% endblock %}

@@ -24,7 +24,6 @@ def create_work_order(request):
             work_order = form.save(commit=False)
             work_order.created_by = request.user
             work_order.status = 'new'
-            work_order.assigned_contractor = work_order.preferred_contractor  # initial assignment
             work_order.save()
             messages.success(request, "Work order created successfully.")
             return redirect('redirect_after_login')
@@ -52,7 +51,7 @@ def my_work_orders(request):
         work_orders = WorkOrder.objects.filter(created_by=user)
 
     elif user.role == 'contractor':
-        work_orders = WorkOrder.objects.filter(assigned_contractor=user)
+        work_orders = WorkOrder.objects.filter(assigned_contractor=user.company)
 
     else:
         return HttpResponseForbidden("Not allowed")
@@ -65,13 +64,13 @@ def my_work_orders(request):
 # Contractor accepts a work order
 # -------------------------------
 @login_required
-def accept_work_order(request, pk):
-    order = get_object_or_404(WorkOrder, pk=pk)
+@require_POST
+def accept_work_order(request, work_order_id):
+    order = get_object_or_404(WorkOrder, pk=work_order_id)
 
-    if request.user.role != 'contractor':
+    if request.user.role != 'contractor' or not request.user.company:
         return HttpResponseForbidden("Not allowed")
 
-    # Only allow if user is preferred or second
     contractor_company = request.user.company
     if contractor_company not in [order.preferred_contractor, order.second_contractor]:
         return HttpResponseForbidden("Not authorized for this order.")
@@ -81,14 +80,13 @@ def accept_work_order(request, pk):
     order.save()
 
     messages.success(request, "Work order accepted.")
-    return redirect('contractor_dashboard')
-
-
+    return redirect('view_work_order_detail', work_order_id=order.id)
 
 # -------------------------------
 # Contractor rejects a work order
 # -------------------------------
 @contractor_required
+@require_POST
 def reject_work_order(request, work_order_id):
     work_order = get_object_or_404(WorkOrder, id=work_order_id)
     contractor_company = request.user.company
@@ -96,33 +94,18 @@ def reject_work_order(request, work_order_id):
     if contractor_company not in [work_order.preferred_contractor, work_order.second_contractor]:
         return HttpResponseForbidden("Not authorized to reject this work order.")
 
-    if work_order.assigned_contractor != contractor_company:
-        # If not yet assigned, but this contractor is rejecting a new or assigned work order
-        if work_order.status in ['new', 'assigned']:
-            if contractor_company == work_order.preferred_contractor and work_order.second_contractor:
-                work_order.assigned_contractor = work_order.second_contractor
-                work_order.status = 'assigned'
-            else:
-                work_order.assigned_contractor = None
-                work_order.status = 'returned'
+    # keep your existing “return/assign second contractor” logic
+    if work_order.status in ['new', 'assigned']:
+        if contractor_company == work_order.preferred_contractor and work_order.second_contractor:
+            work_order.assigned_contractor = work_order.second_contractor
+            work_order.status = 'assigned'
         else:
-            return HttpResponseForbidden("You are not assigned to this work order.")
-    else:
-        # Already assigned and rejecting
-        if work_order.assigned_contractor == work_order.preferred_contractor:
-            if work_order.second_contractor:
-                work_order.assigned_contractor = work_order.second_contractor
-                work_order.status = 'assigned'
-            else:
-                work_order.assigned_contractor = None
-                work_order.status = 'returned'
-        elif work_order.assigned_contractor == work_order.second_contractor:
             work_order.assigned_contractor = None
             work_order.status = 'returned'
+        work_order.save(update_fields=['assigned_contractor', 'status'])
 
-    work_order.save()
     messages.success(request, "You have rejected the work order.")
-    return redirect('my_contractor_orders')
+    return redirect('view_work_order_detail', work_order_id=work_order.id)
 
 
 @contractor_required

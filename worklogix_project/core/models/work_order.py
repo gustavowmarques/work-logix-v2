@@ -43,21 +43,44 @@ class WorkOrder(models.Model):
     priority = models.CharField(
         max_length=20,
         choices=PRIORITY_CHOICES,
-        default='medium'
+        default='medium',
     )
     status = models.CharField(
         max_length=50,
         choices=WORK_ORDER_STATUSES,
-        default=WorkOrderStatus.NEW.name
+        default=WorkOrderStatus.NEW.name,   # or 'new' if you store the value
     )
 
     # ---------------------------
     # Related objects
     # ---------------------------
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
-    unit = models.ForeignKey("core.Unit", on_delete=models.CASCADE)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    business_type = models.ForeignKey(BusinessType, on_delete=models.CASCADE, null=True, blank=True)
+    client = models.ForeignKey(
+        'core.Client',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+    )
+
+    # Only ONE definition for `unit` — nullable + PROTECT
+    unit = models.ForeignKey(
+        'core.Unit',
+        on_delete=models.PROTECT,
+        null=True, blank=True,
+        related_name="work_orders",
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    business_type = models.ForeignKey(
+       'core.BusinessType',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+    )
+
+    # Persist the “common area” choice
+    is_common_area = models.BooleanField(default=False)
 
     # ---------------------------
     # Contractor assignments
@@ -66,22 +89,19 @@ class WorkOrder(models.Model):
         Company,
         related_name='preferred_orders',
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True
+        null=True, blank=True,
     )
     second_contractor = models.ForeignKey(
         Company,
         related_name='second_orders',
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True
+        null=True, blank=True,
     )
     assigned_contractor = models.ForeignKey(
         Company,
         related_name='assigned_orders',
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True
+        null=True, blank=True,
     )
 
     # ---------------------------

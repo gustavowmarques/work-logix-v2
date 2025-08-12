@@ -128,7 +128,7 @@ urlpatterns = [
     # --------------------
     path('work-orders/create/', create_work_order, name='create_work_order'),
     path('work-orders/<int:work_order_id>/', view_work_order_detail, name='view_work_order_detail'),
-    path('work-orders/<int:pk>/accept/', accept_work_order, name='accept_work_order'),
+    path('work-orders/<int:work_order_id>/accept/', accept_work_order, name='accept_work_order'),
     path('work-orders/<int:work_order_id>/reject/', reject_work_order, name='reject_work_order'),
     path('work-orders/<int:work_order_id>/complete/', complete_work_order, name='complete_work_order'),
     path('contractor/work-orders/', my_contractor_orders, name='my_contractor_orders'),
