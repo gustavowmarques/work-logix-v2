@@ -90,7 +90,6 @@ from core.views.admin import (
     view_user,
     edit_user,
     delete_user,
-    create_unit,
     
 )
 
@@ -140,7 +139,6 @@ urlpatterns = [
     # --------------------
     # UNITS
     # --------------------
-    path('units/create/', create_unit, name='create_unit'),
     path('clients/<int:client_id>/units/', client_units, name='client_units'),
     path('units/review/', review_units, name='review_units'),
     path('units/delete/<int:unit_id>/', delete_unit, name='delete_unit'),
