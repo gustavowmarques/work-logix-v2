@@ -1,0 +1,3 @@
+web: gunicorn worklogix_project.wsgi
+release: python manage.py collectstatic --noinput
+web: gunicorn worklogix_project.wsgi
