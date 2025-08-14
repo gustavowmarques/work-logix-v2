@@ -1,0 +1,8 @@
+.unit-cell .fa-pen {
+    visibility: hidden;
+    transition: visibility 0.2s ease-in-out;
+  }
+  .unit-cell:hover .fa-pen {
+    visibility: visible;
+  }
+  

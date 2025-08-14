@@ -1,0 +1,15 @@
+.sidebar {
+    width: 250px;
+  }
+
+.nav-link.active {
+    background-color: #0d6efd;
+    font-weight: bold;
+    border-radius: 4px;
+  }
+  
+
+.content-area {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}

@@ -23,11 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -------------------------------------------------------------------
 # Core flags & hosts
 # -------------------------------------------------------------------
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-please-change-me")
+SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
-CSRF_TRUSTED_ORIGINS = ["https://*.onrender.com"]  # add your custom domain later if you have one
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com", "work-logix-v2.onrender.com"]
+
+CSRF_TRUSTED_ORIGINS = ["https://*.onrender.com"]
 
 # -------------------------------------------------------------------
 # Applications
