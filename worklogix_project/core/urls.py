@@ -99,3 +99,4 @@ urlpatterns = [
          name="get_contractors_by_business_type"),
     path("api/units/<int:client_id>/", get_units_by_client, name="get_units_by_client"),
 ]
+
