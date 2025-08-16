@@ -41,8 +41,6 @@ from core.views.api import get_contractors_by_business_type, get_units_by_client
 
 
 urlpatterns = [
-    # Admin
-    path("admin/", admin.site.urls),
 
     # Auth
     path("", lambda request: redirect("login", permanent=False)),
