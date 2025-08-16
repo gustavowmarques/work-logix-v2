@@ -9,6 +9,7 @@ venv/
 .env
 
 # Database (if using SQLite for dev)
+db.sqlite3
 *.sqlite3
 
 # Django migrations cache (optional)
@@ -18,3 +19,4 @@ venv/
 # VSCode project files
 .vscode/
 .env
+
