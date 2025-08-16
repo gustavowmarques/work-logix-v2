@@ -12,13 +12,13 @@ import os
 
 from dotenv import load_dotenv
 import dj_database_url
-
-load_dotenv()  # read .env if present
+import certifi
 
 # -------------------------------------------------------------------
 # Paths
 # -------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 # -------------------------------------------------------------------
 # Core flags & hosts
@@ -26,9 +26,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com", "work-logix-v2.onrender.com"]
-
-CSRF_TRUSTED_ORIGINS = ["https://*.onrender.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "work-logix-v2.onrender.com"]
+CSRF_TRUSTED_ORIGINS = ["https://work-logix-v2.onrender.com"]
 
 # -------------------------------------------------------------------
 # Applications
@@ -96,13 +95,19 @@ WSGI_APPLICATION = "worklogix_project.wsgi.application"
 # - Uses DATABASE_URL if set (Render sets this automatically)
 # - Falls back to SQLite for local dev
 # -------------------------------------------------------------------
+
+# Use SQLite locally by default; Render will inject DATABASE_URL
+default_sqlite_url = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=default_sqlite_url,
         conn_max_age=600,
-        ssl_require=not DEBUG,
+        ssl_require=False, 
     )
 }
+
+
 
 # -------------------------------------------------------------------
 # Password validation
