@@ -197,9 +197,9 @@ if not DEBUG:
 # '/redirect-after-login/' is reachable to authenticated users and
 # does NOT bounce back to LOGIN_URL.
 # ---------------------------------------------------------------------
-LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/redirect-after-login/"
-LOGOUT_REDIRECT_URL = "/login/"
+LOGIN_URL = "login" 
+LOGIN_REDIRECT_URL = "redirect_after_login"
+LOGOUT_REDIRECT_URL = "login"
 
 # ---------------------------------------------------------------------
 # Project-specific
