@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import CheckboxInput, Textarea, DateInput, ValidationError
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-
+from django.contrib.auth import get_user_model
 from core.models import (
     CustomUser,
     Company,
@@ -54,15 +54,20 @@ class CustomUserCreationForm(UserCreationForm):
         return company
     
 class CustomUserEditForm(UserChangeForm):
+    # Hide the read-only password field that adds "No password set. Set password"
+    password = None
+
     role = forms.ChoiceField(choices=CustomUser._meta.get_field('role').choices)
     company = forms.ModelChoiceField(queryset=Company.objects.all(), required=False)
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'role', 'company']
+        fields = ['username', 'email', 'role', 'company']  # no password here
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # extra defensive guard in case some mixin re-injects it
+        self.fields.pop('password', None)
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
 
