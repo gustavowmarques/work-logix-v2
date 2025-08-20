@@ -16,6 +16,41 @@ from dotenv import load_dotenv
 import dj_database_url
 
 # ---------------------------------------------------------------------
+# Paths & .env  (load .env BEFORE any os.getenv calls)
+# ---------------------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+# ---------------------------------------------------------------------
+# Email
+#
+# Default (dev): console backend prints emails to the terminal.
+# To use SMTP in prod, set the EMAIL_* env vars in your hosting dashboard.
+# ---------------------------------------------------------------------
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend"
+)
+
+EMAIL_FILE_PATH = BASE_DIR / "tmp" / "emails"
+
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@worklogix.local")
+
+# These are only used when EMAIL_BACKEND is SMTP
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587") or "587")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").strip().lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "false").strip().lower() == "true"
+
+# ---------------------------------------------------------------------
+# Optional hardening
+# ---------------------------------------------------------------------
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 24 hours
+
+
+# ---------------------------------------------------------------------
 # Paths & .env
 # ---------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent

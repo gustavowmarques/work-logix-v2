@@ -1,7 +1,7 @@
-# worklogix_project/urls.py
 from django.contrib import admin
 from django.shortcuts import redirect
-from django.urls import path
+from django.urls import path, reverse_lazy
+from django.contrib.auth import views as auth_views
 
 # Auth
 from core.views.auth import CustomLoginView, custom_logout, redirect_after_login
@@ -96,5 +96,45 @@ urlpatterns = [
     path("api/contractors/<int:business_type_id>/", get_contractors_by_business_type,
          name="get_contractors_by_business_type"),
     path("api/units/<int:client_id>/", get_units_by_client, name="get_units_by_client"),
+
+    # 1) Request reset (user enters email)
+    path(
+        "password-reset/",
+        auth_views.PasswordResetView.as_view(
+            template_name="core/auth/password_reset_form.html",
+            email_template_name="core/auth/password_reset_email.txt",
+            subject_template_name="core/auth/password_reset_subject.txt",
+            success_url=reverse_lazy("password_reset_done"),
+        ),
+        name="password_reset",
+    ),
+
+    # 2) "We sent you an email" page
+    path(
+        "password-reset/done/",
+        auth_views.PasswordResetDoneView.as_view(
+            template_name="core/auth/password_reset_done.html",
+        ),
+        name="password_reset_done",
+    ),
+
+    # 3) Link from email lands here (uid + token)
+    path(
+        "reset/<uidb64>/<token>/",
+        auth_views.PasswordResetConfirmView.as_view(
+            template_name="core/auth/password_reset_confirm.html",
+            success_url=reverse_lazy("password_reset_complete"),
+        ),
+        name="password_reset_confirm",
+    ),
+
+    # 4) Final success page
+    path(
+        "reset/done/",
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name="core/auth/password_reset_complete.html",
+        ),
+        name="password_reset_complete",
+    ),
 ]
 
