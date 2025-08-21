@@ -73,6 +73,10 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", ",".join(_default
 _default_csrf = ["http://127.0.0.1:8000", "http://localhost:8000"] if DEBUG else []
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", ",".join(_default_csrf)).split(",") if o.strip()]
 
+# Public base URL for absolute links in emails (production)
+APP_BASE_URL = os.getenv("APP_BASE_URL", "").strip()
+
+
 # ---------------------------------------------------------------------
 # Apps
 # ---------------------------------------------------------------------

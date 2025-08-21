@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.shortcuts import redirect
+from urllib.parse import urlparse
+from django.conf import settings
 from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
 
@@ -39,6 +41,11 @@ from core.views.admin import (
 # API
 from core.views.api import get_contractors_by_business_type, get_units_by_client
 
+# Build context for email links if APP_BASE_URL is set (prod).
+_reset_email_ctx = None
+if getattr(settings, "APP_BASE_URL", ""):
+    _p = urlparse(settings.APP_BASE_URL)
+    _reset_email_ctx = {"protocol": _p.scheme, "domain": _p.netloc}
 
 urlpatterns = [
 
@@ -98,40 +105,37 @@ urlpatterns = [
     path("api/units/<int:client_id>/", get_units_by_client, name="get_units_by_client"),
 
     # 1) Request reset (user enters email)
-    path("password-reset/",
-     auth_views.PasswordResetView.as_view(
-       template_name="core/auth/password_reset_form.html",
-       email_template_name="core/auth/password_reset_email.txt",
-       subject_template_name="core/auth/password_reset_subject.txt",
-       success_url="/password-reset/done/",
-       extra_email_context={"domain": "192.168.1.23:8000", "protocol": "http"},
-     ),
-     name="password_reset"),
-
-    # 2) "We sent you an email" page
+    path(
+        "password-reset/",
+        auth_views.PasswordResetView.as_view(
+            template_name="core/auth/password_reset_form.html",
+            email_template_name="core/auth/password_reset_email.txt",
+            subject_template_name="core/auth/password_reset_subject.txt",
+            success_url="/password-reset/done/",
+            # This makes the email use https://work-logix-v2.onrender.com
+            extra_email_context=_reset_email_ctx,
+        ),
+        name="password_reset",
+    ),
     path(
         "password-reset/done/",
         auth_views.PasswordResetDoneView.as_view(
-            template_name="core/auth/password_reset_done.html",
+            template_name="core/auth/password_reset_done.html"
         ),
         name="password_reset_done",
     ),
-
-    # 3) Link from email lands here (uid + token)
     path(
         "reset/<uidb64>/<token>/",
         auth_views.PasswordResetConfirmView.as_view(
             template_name="core/auth/password_reset_confirm.html",
-            success_url=reverse_lazy("password_reset_complete"),
+            success_url="/password-reset/complete/",
         ),
         name="password_reset_confirm",
     ),
-
-    # 4) Final success page
     path(
-        "reset/done/",
+        "password-reset/complete/",
         auth_views.PasswordResetCompleteView.as_view(
-            template_name="core/auth/password_reset_complete.html",
+            template_name="core/auth/password_reset_complete.html"
         ),
         name="password_reset_complete",
     ),
