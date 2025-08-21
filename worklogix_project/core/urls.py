@@ -98,16 +98,15 @@ urlpatterns = [
     path("api/units/<int:client_id>/", get_units_by_client, name="get_units_by_client"),
 
     # 1) Request reset (user enters email)
-    path(
-        "password-reset/",
-        auth_views.PasswordResetView.as_view(
-            template_name="core/auth/password_reset_form.html",
-            email_template_name="core/auth/password_reset_email.txt",
-            subject_template_name="core/auth/password_reset_subject.txt",
-            success_url=reverse_lazy("password_reset_done"),
-        ),
-        name="password_reset",
-    ),
+    path("password-reset/",
+     auth_views.PasswordResetView.as_view(
+       template_name="core/auth/password_reset_form.html",
+       email_template_name="core/auth/password_reset_email.txt",
+       subject_template_name="core/auth/password_reset_subject.txt",
+       success_url="/password-reset/done/",
+       extra_email_context={"domain": "192.168.1.23:8000", "protocol": "http"},
+     ),
+     name="password_reset"),
 
     # 2) "We sent you an email" page
     path(
